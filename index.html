@@ -1,0 +1,3526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SBS ACADEMY · 상담 자료실</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+  <!-- React -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+  <style>
+    :root {
+      /* === Light Editorial Theme === */
+      /* Primary surfaces (page backgrounds) */
+      --bg: #F4EFE6;            /* main page background (cream) */
+      --bg-soft: #EDE5D6;       /* sidebar, sub-surfaces */
+      --bg-paper: #FBF8F2;      /* card, modal forms */
+      --bg-elev: #FFFFFF;       /* elevated input bg */
+
+      /* Text */
+      --ink: #1A2236;           /* primary text (deep navy) */
+      --ink-strong: #0E1525;    /* hero titles, max contrast */
+      --muted: #5A6378;         /* secondary text — DARKER for AAA */
+      --muted-2: #8089A0;       /* tertiary, hints */
+
+      /* Lines & borders */
+      --line: rgba(14,21,37,0.12);
+      --line-soft: rgba(14,21,37,0.06);
+      --line-strong: rgba(14,21,37,0.20);
+
+      /* Accents */
+      --amber: #B8842D;         /* main amber — DARKENED for contrast on cream */
+      --amber-soft: #D4A24C;    /* lighter amber for badges/decoration */
+      --amber-bg: rgba(184,132,45,0.08);
+      --rose: #B65543;
+
+      /* Dark surfaces (for previews / modals only) */
+      --dark: #0E1525;
+      --dark-soft: #161E30;
+      --dark-line: #232C42;
+      --on-dark: #F4EFE6;
+      --on-dark-muted: #9AA1B0;
+
+      /* Legacy aliases (so existing rules keep working) */
+      --ink-soft: var(--bg-soft);
+      --ink-line: var(--line);
+      --musk: var(--bg-soft);
+      --cream: var(--bg);
+      --cream-soft: var(--bg-soft);
+      --paper: var(--bg-paper);
+      --text: var(--ink);
+      --muted-light: var(--muted-2);
+
+      --serif: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--sans);
+      background: var(--cream);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    img { -webkit-user-drag: none; user-select: none; }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea, select { font-family: inherit; }
+
+    /* ============ Loading (kept dark) ============ */
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--dark);
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      z-index: 9999; gap: 24px;
+    }
+    #loading.hidden { display: none; }
+    .loading-mark {
+      font-family: var(--serif);
+      font-size: 28px; font-style: italic; letter-spacing: .04em;
+      color: var(--on-dark);
+    }
+    .loading-mark .dot { color: var(--amber-soft); }
+    .loading-bar {
+      width: 120px; height: 1px; background: rgba(244,239,230,0.15); position: relative; overflow: hidden;
+    }
+    .loading-bar::after {
+      content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 40%;
+      background: var(--amber-soft); animation: slide 1.4s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    /* ============ Login (kept dark for first impression) ============ */
+    #login-screen {
+      position: fixed; inset: 0;
+      background: var(--dark);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000; padding: 24px;
+    }
+    #login-screen.hidden { display: none; }
+    #login-screen::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(212,162,76,0.08), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(184,132,45,0.06), transparent 50%);
+      pointer-events: none;
+    }
+    .login-frame {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 420px;
+      padding: 56px 44px 44px;
+      background: var(--dark-soft);
+      border: 1px solid var(--dark-line);
+    }
+    .login-frame::before, .login-frame::after {
+      content: ''; position: absolute;
+      width: 24px; height: 24px;
+      border: 1px solid var(--amber-soft);
+    }
+    .login-frame::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+    .login-frame::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+    .login-eyebrow {
+      font-family: var(--sans);
+      font-size: 11px; font-weight: 500; letter-spacing: .3em;
+      color: var(--amber-soft); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .login-title {
+      font-family: var(--serif);
+      font-size: 36px; font-weight: 500; line-height: 1.1;
+      color: var(--on-dark); margin-bottom: 8px;
+    }
+    .login-title em { font-style: italic; color: var(--amber-soft); }
+    .login-sub {
+      font-size: 13px; color: var(--on-dark-muted);
+      margin-bottom: 36px; line-height: 1.6;
+    }
+    .login-field { margin-bottom: 18px; }
+    .login-field label {
+      display: block; font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--on-dark-muted); margin-bottom: 8px; font-weight: 500;
+    }
+    .login-field input {
+      width: 100%; padding: 12px 0; background: transparent;
+      border: none; border-bottom: 1px solid var(--dark-line);
+      color: var(--on-dark); font-size: 14px; outline: none;
+      transition: border-color .25s;
+    }
+    .login-field input:focus { border-bottom-color: var(--amber-soft); }
+    .login-submit {
+      width: 100%; padding: 14px; margin-top: 12px;
+      background: var(--amber-soft); color: var(--dark);
+      border: none; font-size: 12px; font-weight: 600; letter-spacing: .25em; text-transform: uppercase;
+      transition: background .2s;
+    }
+    .login-submit:hover { background: #E2B871; }
+    .login-submit:disabled { background: var(--dark-line); color: var(--on-dark-muted); cursor: not-allowed; }
+    .login-error {
+      color: #E89B8A; font-size: 12px; text-align: center;
+      margin-top: 16px; min-height: 16px; line-height: 1.5;
+    }
+
+    /* ============ App Shell ============ */
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ============ Sidebar (light editorial) ============ */
+    .sidebar {
+      background: var(--bg-soft);
+      color: var(--ink);
+      padding: 28px 0;
+      position: sticky; top: 0;
+      height: 100vh; overflow-y: auto;
+      display: flex; flex-direction: column;
+      border-right: 1px solid var(--line);
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(14,21,37,0.18); }
+
+    .brand {
+      padding: 0 28px 24px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    .brand-mark {
+      font-family: var(--serif);
+      font-size: 22px; font-style: italic; font-weight: 500;
+      letter-spacing: .02em; line-height: 1;
+      color: var(--ink-strong);
+    }
+    .brand-mark .amp { color: var(--amber); }
+    .brand-sub {
+      font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--muted); margin-top: 8px; font-weight: 500;
+    }
+
+    .search-box {
+      margin: 0 20px 24px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      padding: 10px 12px 10px 34px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-box input:focus { border-color: var(--ink-strong); }
+    .search-box input::placeholder { color: var(--muted-2); }
+    .search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      width: 14px; height: 14px; opacity: .5;
+      color: var(--ink);
+    }
+
+    .nav-label {
+      font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--muted); padding: 0 28px; margin-bottom: 10px;
+      font-weight: 500;
+    }
+    .nav-list { list-style: none; margin-bottom: 28px; }
+    .nav-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 28px;
+      font-size: 14px; color: var(--ink);
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .nav-item:hover { background: rgba(14,21,37,0.04); }
+    .nav-item.active {
+      background: var(--bg-paper);
+      border-left-color: var(--amber);
+      color: var(--amber);
+    }
+    .nav-item .nav-name { font-weight: 500; }
+    .nav-item .nav-count {
+      font-size: 11px; color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .nav-item.active .nav-count { color: var(--amber); opacity: .8; }
+
+    .nav-item.nav-sub {
+      padding-left: 44px;
+      font-size: 13px;
+      color: var(--ink); opacity: 0.85;
+    }
+    .nav-item.nav-sub.active {
+      background: var(--bg-paper);
+      border-left-color: var(--amber);
+      color: var(--amber); opacity: 1;
+    }
+    .nav-item.nav-subsub {
+      padding-left: 60px;
+      font-size: 12px;
+      color: var(--ink); opacity: 0.7;
+    }
+    .nav-item.nav-subsub.active {
+      background: var(--bg-paper);
+      border-left-color: var(--amber);
+      color: var(--amber); opacity: 1; font-weight: 600;
+    }
+
+    .sidebar-footer {
+      margin-top: auto; padding: 20px 28px;
+      border-top: 1px solid var(--line);
+      font-size: 11px; color: var(--muted);
+    }
+    .user-email {
+      display: block; color: var(--ink); font-size: 12px;
+      margin-bottom: 8px; font-weight: 500;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sidebar-actions { display: flex; gap: 8px; }
+    .sidebar-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      padding: 7px 10px;
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      font-weight: 500;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .sidebar-btn:hover { border-color: var(--ink-strong); background: var(--ink-strong); color: var(--bg); }
+    .sidebar-btn.danger:hover { border-color: var(--rose); background: var(--rose); color: var(--bg); }
+
+    /* ============ Main Content ============ */
+    .main {
+      background: var(--bg);
+      min-height: 100vh;
+      position: relative;
+    }
+    .main-header {
+      padding: 48px 56px 28px;
+      border-bottom: 1px solid var(--line-soft);
+      display: flex; justify-content: space-between; align-items: flex-end;
+      gap: 24px;
+    }
+    .header-text { flex: 1; }
+    .header-eyebrow {
+      font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--amber); font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .header-title {
+      font-family: var(--serif);
+      font-size: 38px; font-weight: 700; line-height: 1.1;
+      color: var(--ink-strong); letter-spacing: -.02em;
+    }
+    .header-title em { font-style: normal; color: var(--amber); }
+    .header-meta {
+      font-size: 13px; color: var(--muted); margin-top: 14px;
+      display: flex; gap: 16px; align-items: center;
+    }
+    .header-meta .dot { width: 3px; height: 3px; background: var(--muted-light); border-radius: 50%; }
+
+    .header-actions { display: flex; gap: 10px; }
+    .btn {
+      padding: 10px 18px;
+      background: var(--ink-strong); color: var(--bg);
+      border: 1px solid var(--ink-strong);
+      font-size: 12px; letter-spacing: .15em; text-transform: uppercase;
+      font-weight: 500;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+    .btn:hover { background: var(--ink); border-color: var(--ink); }
+    .btn.ghost { background: transparent; color: var(--ink-strong); }
+    .btn.ghost:hover { background: var(--ink-strong); color: var(--bg); }
+    .btn.amber { background: var(--amber); border-color: var(--amber); color: #fff; }
+    .btn.amber:hover { background: #9C7022; border-color: #9C7022; }
+
+    /* ============ Sub-categories ============ */
+    .subcat-bar {
+      padding: 18px 56px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+      border-bottom: 1px solid rgba(14,21,37,0.06);
+    }
+    .subcat-chip {
+      padding: 7px 14px;
+      background: transparent;
+      border: 1px solid rgba(14,21,37,0.15);
+      color: var(--text);
+      font-size: 12px; font-weight: 500;
+      transition: all .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .subcat-chip:hover { border-color: var(--ink-strong); color: var(--ink-strong); }
+    .subcat-chip.active {
+      background: var(--ink-strong); color: var(--bg); border-color: var(--ink-strong);
+    }
+    .subcat-chip .chip-count {
+      font-size: 10px; color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .subcat-chip.active .chip-count { color: var(--bg); opacity: .7; }
+
+    .subcat-add {
+      padding: 7px 12px;
+      background: transparent;
+      border: 1px dashed rgba(14,21,37,0.25);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .subcat-add:hover { color: var(--ink); border-color: var(--ink); }
+
+    /* ============ Card Grid ============ */
+    .grid-wrap { padding: 32px 56px 80px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--paper);
+      border: 1px solid rgba(14,21,37,0.08);
+      transition: border-color .2s, transform .2s;
+      cursor: pointer;
+      position: relative;
+      display: flex; flex-direction: column;
+    }
+    .card:hover {
+      border-color: var(--ink);
+      transform: translateY(-2px);
+    }
+    .card-thumb {
+      aspect-ratio: 16 / 10;
+      background: var(--cream-soft);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-thumb img, .card-thumb video {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block;
+    }
+    .card-thumb-placeholder {
+      font-family: var(--serif);
+      font-size: 32px; font-style: italic;
+      color: var(--muted-light);
+    }
+    .card-thumb-badge {
+      position: absolute; top: 10px; left: 10px;
+      padding: 4px 8px; background: rgba(14,21,37,0.85);
+      color: var(--cream);
+      font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+      backdrop-filter: blur(4px);
+    }
+    .card-fav {
+      position: absolute; top: 8px; right: 8px;
+      width: 30px; height: 30px;
+      background: rgba(251,248,242,0.92);
+      border: none;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+      backdrop-filter: blur(4px);
+    }
+    .card-fav:hover { background: var(--paper); }
+    .card-fav svg { width: 16px; height: 16px; fill: none; stroke: var(--ink); stroke-width: 1.5; }
+    .card-fav.active svg { fill: var(--amber); stroke: var(--amber); }
+
+    .card-body {
+      padding: 14px 16px;
+      flex: 1;
+      display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+      gap: 10px;
+    }
+    .card-body-compact .card-title {
+      margin-bottom: 0;
+      flex: 1;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .card-title {
+      font-family: var(--serif);
+      font-size: 15px; font-weight: 700; line-height: 1.4;
+      color: var(--ink-strong);
+      letter-spacing: -.01em;
+    }
+    .card-edit-actions {
+      display: flex; gap: 4px;
+      flex-shrink: 0;
+    }
+    .card-edit-btn {
+      width: 26px; height: 26px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .card-edit-btn:hover { border-color: var(--line-strong); color: var(--ink); }
+
+    /* ============ Empty state ============ */
+    .empty {
+      padding: 80px 40px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty-mark {
+      font-family: var(--serif);
+      font-size: 64px; font-style: italic;
+      color: var(--line-strong);
+      margin-bottom: 12px;
+    }
+    .empty-title {
+      font-family: var(--serif);
+      font-size: 22px; color: var(--ink-strong);
+      margin-bottom: 6px;
+    }
+    .empty-text { font-size: 13px; line-height: 1.6; max-width: 320px; margin: 0 auto; }
+
+    /* ============ Fullscreen Modal (Preview) ============ */
+    /* ============ Fullscreen Modal (kept dark — best for media) ============ */
+    .modal {
+      position: fixed; inset: 0;
+      background: rgba(14,21,37,0.94);
+      z-index: 9500;
+      display: flex; flex-direction: column;
+      backdrop-filter: blur(8px);
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 36px;
+      border-bottom: 1px solid rgba(244,239,230,0.1);
+      color: var(--on-dark);
+      flex-shrink: 0;
+    }
+    .modal-title-block { flex: 1; min-width: 0; }
+    .modal-eyebrow {
+      font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--amber-soft); margin-bottom: 4px; font-weight: 500;
+    }
+    .modal-title {
+      font-family: var(--serif);
+      font-size: 24px; font-weight: 500;
+      color: var(--on-dark);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .modal-actions { display: flex; gap: 8px; align-items: center; }
+    .modal-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid rgba(244,239,230,0.2);
+      color: var(--on-dark);
+      font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+      transition: all .2s;
+    }
+    .modal-btn:hover { border-color: var(--amber-soft); color: var(--amber-soft); }
+    .modal-btn.close { padding: 8px 14px; }
+
+    .modal-body {
+      flex: 1; overflow: auto;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 0;
+    }
+    .modal-preview {
+      background: var(--dark-soft);
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px;
+      overflow: auto;
+    }
+    .modal-preview img, .modal-preview video {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .modal-preview iframe {
+      width: 100%; max-width: 1200px;
+      aspect-ratio: 16/9;
+      border: none; background: #000;
+    }
+    .modal-preview .pdf-pages {
+      display: flex; flex-direction: column; gap: 16px;
+      width: 100%; max-width: 900px;
+    }
+    .modal-preview .pdf-pages canvas {
+      width: 100%; height: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .modal-preview-empty {
+      text-align: center; color: var(--on-dark-muted);
+    }
+    .modal-preview-empty .mark {
+      font-family: var(--serif); font-size: 80px; font-style: italic;
+      color: rgba(244,239,230,0.18); margin-bottom: 16px;
+    }
+
+    .modal-info {
+      background: var(--dark);
+      color: var(--on-dark);
+      padding: 36px;
+      overflow-y: auto;
+      border-left: 1px solid var(--dark-line);
+    }
+    .info-section { margin-bottom: 28px; }
+    .info-section:last-child { margin-bottom: 0; }
+    .info-label {
+      font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--on-dark-muted); font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .info-value {
+      font-size: 14px; line-height: 1.6;
+      color: var(--on-dark);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .info-value a { color: var(--amber-soft); text-decoration: none; border-bottom: 1px solid rgba(212,162,76,0.3); }
+    .info-value a:hover { border-bottom-color: var(--amber-soft); }
+    .info-value.serif {
+      font-family: var(--serif);
+      font-size: 22px; line-height: 1.3;
+    }
+
+    /* ============ Forms / Editor Modal ============ */
+    .form-modal {
+      position: fixed; inset: 0;
+      background: rgba(14,21,37,0.7);
+      z-index: 9600;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+      padding: 20px;
+      animation: fadeIn .2s ease;
+    }
+    .form-frame {
+      background: var(--paper);
+      width: 100%; max-width: 640px;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      border: 1px solid var(--ink-line);
+      position: relative;
+    }
+    .form-header {
+      padding: 28px 36px 20px;
+      border-bottom: 1px solid rgba(14,21,37,0.08);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .form-header h3 {
+      font-family: var(--serif);
+      font-size: 26px; font-weight: 500;
+      color: var(--ink);
+    }
+    .form-close {
+      background: none; border: none;
+      font-size: 24px; color: var(--muted);
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .form-close:hover { color: var(--ink); }
+    .form-body {
+      padding: 28px 36px;
+      overflow-y: auto;
+    }
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .field label .required { color: var(--rose); }
+    .field input, .field textarea, .field select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--cream);
+      border: 1px solid rgba(14,21,37,0.12);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      border-color: var(--ink);
+    }
+    .field textarea {
+      min-height: 90px; resize: vertical;
+      font-family: inherit;
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .file-drop {
+      border: 1px dashed rgba(14,21,37,0.2);
+      padding: 24px; text-align: center;
+      background: var(--cream);
+      transition: border-color .2s, background .2s;
+    }
+    .file-drop:hover { border-color: var(--ink); background: var(--paper); }
+    .file-drop.dragging { border-color: var(--amber); background: rgba(212,162,76,0.05); }
+    .file-drop .mark {
+      font-family: var(--serif); font-size: 32px; font-style: italic;
+      color: var(--muted-light); margin-bottom: 6px;
+    }
+    .file-drop p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .file-drop button {
+      padding: 6px 14px;
+      background: var(--ink); color: var(--cream);
+      border: none;
+      font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+    }
+    .file-list {
+      margin-top: 14px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .file-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; background: var(--cream-soft);
+      font-size: 12px;
+    }
+    .file-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .file-row button {
+      background: none; border: none; color: var(--muted);
+      font-size: 14px; padding: 0 6px;
+    }
+    .file-row button:hover { color: var(--rose); }
+
+    .form-foot {
+      padding: 20px 36px;
+      border-top: 1px solid rgba(14,21,37,0.08);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+    }
+    .form-foot .left { display: flex; gap: 8px; }
+    .form-foot .right { display: flex; gap: 10px; }
+
+    /* ============ Home (light editorial) ============ */
+    .home {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+    .home::before {
+      content: ''; position: absolute; top: 0; right: 0; width: 60%; height: 720px;
+      background: radial-gradient(circle at 70% 30%, rgba(184,132,45,0.10), transparent 55%);
+      pointer-events: none;
+    }
+    .home::after {
+      content: ''; position: absolute; top: 60px; right: 60px;
+      width: 480px; height: 480px;
+      border: 1px solid rgba(184,132,45,0.18);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .home-orbit {
+      position: absolute; top: 140px; right: 140px;
+      width: 320px; height: 320px;
+      border: 1px solid rgba(184,132,45,0.13);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .home-inner { position: relative; z-index: 1; padding: 56px 64px 80px; }
+
+    .home-topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px; letter-spacing: .3em; color: var(--muted);
+      text-transform: uppercase; font-weight: 500;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 80px;
+    }
+    .home-topbar .right { display: flex; gap: 20px; align-items: center; }
+
+    .home-hero { margin-bottom: 64px; max-width: 720px; }
+    .home-eyebrow {
+      font-size: 11px; letter-spacing: .35em; text-transform: uppercase;
+      color: var(--amber); font-weight: 600;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .home-eyebrow::before {
+      content: ''; width: 24px; height: 1px; background: var(--amber);
+    }
+    .home-title {
+      font-family: var(--serif);
+      font-size: 64px; font-weight: 700; line-height: 1.1;
+      letter-spacing: -.02em;
+      color: var(--ink-strong);
+      margin-bottom: 28px;
+    }
+    .home-title em { font-style: normal; color: var(--amber); }
+    .home-tagline {
+      font-size: 16px; color: var(--ink); line-height: 1.7;
+      max-width: 520px;
+      white-space: pre-wrap;
+      opacity: 0.78;
+    }
+
+    .home-title-edit, .home-tagline-edit {
+      width: 100%;
+      background: var(--bg-paper);
+      border: 1px dashed rgba(184,132,45,0.5);
+      color: var(--ink);
+      font-family: inherit; font-size: inherit; font-weight: inherit;
+      line-height: inherit; letter-spacing: inherit;
+      padding: 8px 12px;
+      outline: none;
+      resize: vertical;
+    }
+    .home-title-edit { font-family: var(--serif); color: var(--ink-strong); }
+    .home-title-edit:focus, .home-tagline-edit:focus {
+      border-color: var(--amber); border-style: solid;
+    }
+
+    .home-stats {
+      display: flex; gap: 56px;
+      padding: 24px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 80px;
+    }
+    .home-stat-num {
+      font-family: var(--serif);
+      font-size: 44px; font-weight: 500; line-height: 1;
+      color: var(--ink-strong);
+      font-variant-numeric: tabular-nums;
+    }
+    .home-stat-num.amber { color: var(--amber); }
+    .home-stat-label {
+      font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--muted); margin-top: 8px; font-weight: 500;
+    }
+
+    .home-section-label {
+      font-size: 11px; letter-spacing: .35em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500;
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .home-section-label::before {
+      content: ''; width: 24px; height: 1px; background: var(--muted-2);
+    }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .home-card {
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      padding: 28px 24px 24px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .2s, transform .2s, box-shadow .2s, background .2s;
+      min-height: 168px;
+      display: flex; flex-direction: column;
+    }
+    .home-card:hover {
+      border-color: var(--amber);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(14,21,37,0.08);
+    }
+    .home-card.featured {
+      background: var(--amber-bg);
+      border-color: var(--amber);
+    }
+    .home-card-num {
+      font-family: var(--serif);
+      font-size: 30px; font-style: italic; font-weight: 500;
+      color: var(--amber);
+      line-height: 1; margin-bottom: 18px;
+    }
+    .home-card-title {
+      font-size: 15px; font-weight: 600;
+      color: var(--ink-strong);
+      margin-bottom: 6px;
+      letter-spacing: -.005em;
+    }
+    .home-card-desc {
+      font-size: 13px; color: var(--muted);
+      line-height: 1.5; margin-bottom: 14px;
+    }
+    .home-card-foot {
+      margin-top: auto;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--muted); font-weight: 500;
+    }
+    .home-card-foot .arrow {
+      color: var(--amber); font-size: 14px; letter-spacing: 0;
+    }
+    .home-card-count { font-variant-numeric: tabular-nums; }
+    .home-card-badge {
+      position: absolute; top: 14px; right: 14px;
+      font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--amber); font-weight: 600;
+    }
+
+    .home-edit-actions {
+      display: flex; gap: 8px; margin-top: 16px;
+    }
+    .home-edit-btn {
+      padding: 8px 18px;
+      font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+      font-weight: 600;
+      background: var(--ink-strong); color: var(--bg);
+      border: 1px solid var(--ink-strong);
+      transition: opacity .2s;
+    }
+    .home-edit-btn:hover { opacity: 0.85; }
+    .home-edit-btn.ghost {
+      background: transparent; color: var(--ink);
+      border-color: var(--line-strong);
+    }
+    .home-edit-btn.ghost:hover { border-color: var(--ink); }
+
+    @media (max-width: 1100px) {
+      .home-grid { grid-template-columns: repeat(3, 1fr); }
+      .home-title { font-size: 56px; }
+      .home-inner { padding: 44px 40px 60px; }
+    }
+    @media (max-width: 820px) {
+      .home-grid { grid-template-columns: repeat(2, 1fr); }
+      .home-title { font-size: 40px; }
+      .home-inner { padding: 80px 24px 48px; }
+      .home-stats { gap: 32px; flex-wrap: wrap; }
+      .home-stat-num { font-size: 32px; }
+      .home::after, .home-orbit { display: none; }
+    }
+    @media (max-width: 480px) {
+      .home-grid { grid-template-columns: 1fr; }
+      .home-title { font-size: 32px; }
+    }
+
+    /* ============ SubCategory Landing (분류 카드 그리드) ============ */
+    .subcat-landing { padding: 32px 56px 80px; }
+    .subcat-landing-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 920px;
+    }
+    .subcat-card {
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      padding: 28px 28px 24px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      min-height: 168px;
+      display: flex; flex-direction: column;
+    }
+    .subcat-card:hover {
+      border-color: var(--amber);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(14,21,37,0.06);
+    }
+    .subcat-card-num {
+      font-family: var(--serif);
+      font-size: 28px; font-weight: 700; font-style: italic;
+      color: var(--amber);
+      line-height: 1; margin-bottom: 16px;
+    }
+    .subcat-card-title {
+      font-size: 19px; font-weight: 700;
+      color: var(--ink-strong);
+      margin-bottom: 6px;
+      letter-spacing: -.015em;
+    }
+    .subcat-card-meta {
+      font-size: 12px; color: var(--muted);
+      margin-bottom: 14px; line-height: 1.5;
+    }
+    .subcat-card-foot {
+      margin-top: auto;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--muted);
+      letter-spacing: .1em;
+    }
+    .subcat-card-foot .arrow {
+      color: var(--amber); font-size: 16px;
+    }
+    .subcat-card-actions {
+      position: absolute; top: 12px; right: 12px;
+      display: flex; gap: 4px;
+      opacity: 0; transition: opacity .15s;
+    }
+    .subcat-card:hover .subcat-card-actions { opacity: 1; }
+    .subcat-card-action {
+      width: 24px; height: 24px;
+      background: var(--bg-paper); border: 1px solid var(--line);
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 11px;
+    }
+    .subcat-card-action:hover { color: var(--ink); border-color: var(--ink); }
+    .subcat-add-card {
+      background: transparent;
+      border: 1px dashed var(--line-strong);
+      padding: 28px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+      min-height: 168px;
+    }
+    .subcat-add-card:hover { border-color: var(--ink); color: var(--ink); border-style: solid; }
+
+    /* ============ SubCategory Detail Page (분류의 노션 페이지) ============ */
+    .subcat-page {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .subcat-page-cover {
+      height: 120px;
+      background: linear-gradient(135deg, rgba(184,132,45,0.18), rgba(14,21,37,0.06));
+    }
+    .subcat-page-body {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 28px 36px 60px;
+    }
+
+    @media (max-width: 820px) {
+      .subcat-landing { padding: 24px; }
+      .subcat-landing-grid { grid-template-columns: 1fr; }
+      .subcat-page-body { padding: 24px 20px 60px; }
+    }
+
+    /* ============ Detail Page (Notion-style) ============ */
+    .detail {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .detail-topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 32px;
+      border-bottom: 1px solid var(--line-soft);
+      font-size: 12px; color: var(--muted);
+      position: sticky; top: 0; background: var(--bg);
+      z-index: 100;
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap;
+    }
+    .breadcrumb a, .breadcrumb span.crumb {
+      color: var(--muted); cursor: pointer; font-size: 12px;
+      background: none; border: none; font-family: inherit;
+      padding: 0;
+    }
+    .breadcrumb a:hover, .breadcrumb span.crumb:hover { color: var(--ink); }
+    .breadcrumb .sep { color: var(--amber); font-weight: 500; }
+    .breadcrumb .current { color: var(--ink-strong); font-weight: 600; }
+
+    .detail-actions { display: flex; gap: 6px; }
+    .detail-btn {
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+      font-weight: 500;
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .detail-btn:hover { background: var(--ink-strong); color: var(--bg); border-color: var(--ink-strong); }
+    .detail-btn.amber { background: var(--amber); color: #fff; border-color: var(--amber); }
+    .detail-btn.amber:hover { background: #9C7022; border-color: #9C7022; }
+    .detail-btn.fav.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+    .detail-btn.danger:hover { background: var(--rose); border-color: var(--rose); }
+
+    .detail-cover {
+      height: 140px;
+      background: linear-gradient(135deg, rgba(184,132,45,0.15), rgba(14,21,37,0.06));
+    }
+
+    .detail-body {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 36px 36px 80px;
+    }
+    .detail-eyebrow {
+      font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--amber); font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .detail-title {
+      font-size: 36px; font-weight: 700; line-height: 1.15;
+      color: var(--ink-strong); letter-spacing: -.02em;
+      margin-bottom: 28px;
+    }
+    .detail-title-input {
+      width: 100%;
+      font-size: 36px; font-weight: 700; line-height: 1.15;
+      color: var(--ink-strong); letter-spacing: -.02em;
+      background: transparent;
+      border: 1px dashed rgba(184,132,45,0.4);
+      padding: 4px 8px;
+      outline: none;
+      font-family: inherit;
+    }
+    .detail-title-input:focus { border-style: solid; border-color: var(--amber); }
+
+    /* Property table */
+    .props {
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      padding: 4px 18px;
+      margin-bottom: 32px;
+    }
+    .props-row {
+      display: grid; grid-template-columns: 130px 1fr;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line-soft);
+      font-size: 13px;
+      align-items: start;
+    }
+    .props-row:last-child { border-bottom: none; }
+    .props-label {
+      color: var(--muted); font-weight: 500;
+      font-size: 12px;
+    }
+    .props-value { color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+    .props-value a { color: var(--amber); text-decoration: none; border-bottom: 1px solid rgba(184,132,45,0.3); }
+    .props-value input, .props-value textarea, .props-value select {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      font-size: 13px;
+      color: var(--ink);
+      font-family: inherit;
+      outline: none;
+    }
+    .props-value input:focus, .props-value textarea:focus, .props-value select:focus {
+      border-color: var(--ink-strong);
+    }
+    .props-value textarea { min-height: 60px; resize: vertical; }
+
+    /* Body editor */
+    .body-section { margin-top: 28px; }
+    .body-label {
+      font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--muted); font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .editor-toolbar {
+      display: flex; gap: 4px; flex-wrap: wrap;
+      padding: 8px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-bottom: none;
+      position: sticky; top: 50px; z-index: 50;
+    }
+    .toolbar-btn {
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 500;
+      transition: background .12s, border-color .12s;
+      min-width: 30px;
+      font-family: inherit;
+    }
+    .toolbar-btn:hover { background: var(--bg-paper); border-color: var(--line); }
+    .toolbar-btn.h1 { font-weight: 700; }
+    .toolbar-sep {
+      width: 1px; background: var(--line); margin: 4px 4px;
+    }
+
+    .editor {
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      padding: 24px 28px;
+      min-height: 320px;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--ink);
+      outline: none;
+    }
+    .editor:focus { border-color: var(--ink-strong); }
+    .editor[contenteditable="true"]:empty::before {
+      content: attr(data-placeholder);
+      color: var(--muted-2);
+      pointer-events: none;
+      display: block;
+    }
+    .editor h1 { font-size: 26px; font-weight: 700; margin: 18px 0 10px; line-height: 1.2; color: var(--ink-strong); }
+    .editor h2 { font-size: 20px; font-weight: 700; margin: 16px 0 8px; line-height: 1.3; color: var(--ink-strong); }
+    .editor h3 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; color: var(--ink-strong); }
+    .editor p { margin: 0 0 10px; }
+    .editor ul, .editor ol { padding-left: 24px; margin: 0 0 12px; }
+    .editor li { margin-bottom: 4px; }
+    .editor blockquote {
+      margin: 14px 0;
+      padding: 12px 18px;
+      border-left: 3px solid var(--amber);
+      background: var(--amber-bg);
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .editor a { color: var(--amber); border-bottom: 1px solid rgba(184,132,45,0.3); text-decoration: none; }
+    .editor strong { font-weight: 700; color: var(--ink-strong); }
+    .editor em { font-style: italic; }
+    .editor img { max-width: 100%; height: auto; margin: 8px 0; }
+
+    .body-readonly {
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      padding: 28px 32px;
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--ink);
+      min-height: 80px;
+    }
+    .body-readonly h1 { font-size: 26px; font-weight: 700; margin: 22px 0 12px; line-height: 1.2; color: var(--ink-strong); }
+    .body-readonly h1:first-child { margin-top: 0; }
+    .body-readonly h2 { font-size: 20px; font-weight: 700; margin: 20px 0 10px; line-height: 1.3; color: var(--ink-strong); }
+    .body-readonly h3 { font-size: 16px; font-weight: 700; margin: 16px 0 6px; color: var(--ink-strong); }
+    .body-readonly p { margin: 0 0 12px; }
+    .body-readonly ul, .body-readonly ol { padding-left: 24px; margin: 0 0 14px; }
+    .body-readonly li { margin-bottom: 5px; }
+    .body-readonly blockquote {
+      margin: 16px 0;
+      padding: 14px 18px;
+      border-left: 3px solid var(--amber);
+      background: var(--amber-bg);
+      font-size: 14px;
+    }
+    .body-readonly a { color: var(--amber); border-bottom: 1px solid rgba(184,132,45,0.3); text-decoration: none; }
+    .body-readonly a:hover { border-bottom-color: var(--amber); }
+    .body-readonly img { max-width: 100%; height: auto; margin: 10px 0; }
+    .body-readonly:empty { display: none; }
+
+    /* Media gallery in detail */
+    .detail-media { margin-top: 36px; }
+    .detail-media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .detail-media-item {
+      background: var(--bg-paper);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: border-color .15s;
+      overflow: hidden;
+    }
+    .detail-media-item:hover { border-color: var(--amber); }
+    .detail-media-thumb {
+      aspect-ratio: 16 / 10;
+      background: var(--bg-soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; color: var(--muted-2);
+      overflow: hidden;
+    }
+    .detail-media-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-media-info {
+      padding: 10px 12px;
+      font-size: 12px; color: var(--ink);
+    }
+    .detail-media-info .type {
+      font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--amber); font-weight: 600; margin-bottom: 3px;
+    }
+    .detail-media-info .name {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* Third-tier sidebar in section view */
+    .section-with-tier {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 0;
+    }
+    .tier-side {
+      padding: 18px 18px 28px;
+      border-right: 1px solid var(--line-soft);
+      min-height: 400px;
+    }
+    .tier-side-label {
+      font-size: 10px; letter-spacing: .25em; text-transform: uppercase;
+      color: var(--muted); font-weight: 600;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .tier-side-list {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .tier-side-item {
+      text-align: left;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-left: 2px solid transparent;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .12s;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: inherit;
+    }
+    .tier-side-item:hover { background: var(--bg-soft); }
+    .tier-side-item.active {
+      background: var(--amber-bg);
+      border-left-color: var(--amber);
+      color: var(--amber);
+      font-weight: 600;
+    }
+    .tier-side-item .num { font-size: 11px; color: var(--muted); }
+    .tier-side-item.active .num { color: var(--amber); opacity: .8; }
+    .tier-side-add {
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .tier-side-add:hover { color: var(--ink); border-color: var(--ink); }
+
+    @media (max-width: 820px) {
+      .section-with-tier { grid-template-columns: 1fr; }
+      .tier-side {
+        border-right: none;
+        border-bottom: 1px solid var(--line-soft);
+        min-height: 0;
+        padding: 14px 24px;
+      }
+      .tier-side-list { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+      .tier-side-item { border-left: none; border-bottom: 2px solid transparent; padding: 6px 10px; background: var(--bg-paper); border: 1px solid var(--line); }
+      .tier-side-item.active { border: 1px solid var(--amber); border-left: 1px solid var(--amber); }
+      .detail-body { padding: 24px 20px 60px; }
+      .detail-title { font-size: 28px; }
+      .detail-title-input { font-size: 28px; }
+      .props-row { grid-template-columns: 100px 1fr; }
+    }
+
+    /* ============ Sync indicator ============ */
+    #sync {
+      position: fixed; bottom: 20px; left: 300px;
+      background: var(--ink); color: var(--cream);
+      padding: 8px 16px;
+      font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+      opacity: 0; transition: opacity .3s;
+      z-index: 8000;
+      border-left: 2px solid var(--amber);
+    }
+    #sync.show { opacity: 1; }
+
+    /* ============ Mobile ============ */
+    .mobile-toggle {
+      display: none;
+      position: fixed; top: 16px; left: 16px;
+      width: 40px; height: 40px;
+      background: var(--ink); color: var(--cream);
+      border: none;
+      z-index: 7500;
+      align-items: center; justify-content: center;
+    }
+    .mobile-toggle svg { width: 18px; height: 18px; }
+
+    @media (max-width: 1024px) {
+      .modal-body { grid-template-columns: 1fr; }
+      .modal-info { border-left: none; border-top: 1px solid var(--ink-line); }
+    }
+
+    @media (max-width: 820px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed; top: 0; left: 0; bottom: 0;
+        width: 280px; z-index: 7000;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-toggle { display: flex; }
+      .main-header { padding: 80px 24px 20px; flex-direction: column; align-items: flex-start; }
+      .header-title { font-size: 32px; }
+      .subcat-bar { padding: 14px 24px; }
+      .grid-wrap { padding: 24px; }
+      .form-foot { flex-direction: column-reverse; align-items: stretch; }
+      .form-foot .left, .form-foot .right { justify-content: stretch; }
+      .form-foot button { flex: 1; }
+      #sync { left: 16px; }
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(14,21,37,0.5);
+      z-index: 6900;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    /* ============ Toast / Confirm ============ */
+    .confirm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(14,21,37,0.7);
+      z-index: 9700;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    .confirm-box {
+      background: var(--paper);
+      max-width: 380px; width: calc(100% - 40px);
+      padding: 32px 32px 24px;
+      border: 1px solid var(--ink-line);
+    }
+    .confirm-title {
+      font-family: var(--serif);
+      font-size: 22px; color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .confirm-text {
+      font-size: 13px; color: var(--muted); line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* selection */
+    ::selection { background: var(--amber); color: var(--ink); }
+  </style>
+</head>
+<body>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="loading-mark">SBS<span class="dot">·</span>Academy</div>
+    <div class="loading-bar"></div>
+  </div>
+
+  <!-- Login -->
+  <div id="login-screen" class="hidden">
+    <div class="login-frame">
+      <div class="login-eyebrow">Restricted Access</div>
+      <h1 class="login-title">상담 <em>자료실</em></h1>
+      <p class="login-sub">SBS 아카데미 상담실 전용 페이지입니다.<br/>등록된 계정으로 로그인해 주세요.</p>
+      <div class="login-field">
+        <label>이메일</label>
+        <input type="email" id="login-email" autocomplete="email" />
+      </div>
+      <div class="login-field">
+        <label>비밀번호</label>
+        <input type="password" id="login-password" autocomplete="current-password" />
+      </div>
+      <button class="login-submit" id="login-submit">로그인</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- App root -->
+  <div id="root"></div>
+  <div id="sync"></div>
+
+
+<script type="text/babel" data-presets="env,react">
+(function(){
+'use strict';
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+/* ============ Firebase Init ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCHB-qL2PvtO7oEA5fDEHGaMZMcHDKyH0Q",
+  authDomain: "customer-6b236.firebaseapp.com",
+  projectId: "customer-6b236",
+  storageBucket: "customer-6b236.firebasestorage.app",
+  messagingSenderId: "689962334329",
+  appId: "1:689962334329:web:8236176ec0fa89a8e0bca8"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbDb = firebase.firestore();
+try { fbDb.settings({ ignoreUndefinedProperties: true }); } catch(e) {}
+const fbStorage = firebase.storage();
+const DOC_REF = fbDb.collection('app').doc('main');
+
+/* ============ Constants ============ */
+const SECTIONS = [
+  { key: 'curriculum', name: '교육과정', sub: '커리큘럼 · 수강료 · 시간표' },
+  { key: 'portfolio',  name: '포트폴리오', sub: '졸업생 · 재학생 작품' },
+  { key: 'links',      name: '자료 모음', sub: '레퍼런스 · 도구 · 채용' },
+  { key: 'seminar',    name: '세미나·특강', sub: '특강 다시보기 · 일정' },
+  { key: 'trend',      name: '취업 트렌드', sub: '업계 동향 · 사례' },
+  { key: 'promo',      name: '프로모션', sub: '할인 · 혜택' },
+  { key: 'mentor',     name: '멘토 소개', sub: '강사 · 전문가' },
+  { key: 'favorites',  name: '즐겨찾기', sub: '자주 보여주는 자료', special: true }
+];
+
+const SECTION_FIELDS = {
+  curriculum: [
+    { key: 'title', label: '과정명', type: 'text', required: true, isTitle: true },
+    { key: 'desc', label: '설명', type: 'textarea' },
+    { key: 'duration', label: '교육 기간', type: 'text', placeholder: '예: 3개월' },
+    { key: 'fee', label: '수강료', type: 'text', placeholder: '예: 월 50만원' },
+    { key: 'capacity', label: '정원', type: 'text', placeholder: '예: 20명' },
+    { key: 'schedule', label: '시간표', type: 'text', placeholder: '월/수/금 14:00' },
+    { key: 'videoUrl', label: '영상 링크', type: 'text', placeholder: 'YouTube 등' }
+  ],
+  portfolio: [
+    { key: 'title', label: '제목', type: 'text', required: true, isTitle: true },
+    { key: 'desc', label: '설명', type: 'textarea' },
+    { key: 'author', label: '제작자', type: 'text' },
+    { key: 'videoUrl', label: '영상 링크', type: 'text' },
+    { key: 'url', label: '외부 링크', type: 'text' }
+  ],
+  links: [
+    { key: 'title', label: '제목', type: 'text', required: true, isTitle: true },
+    { key: 'desc', label: '설명', type: 'textarea' },
+    { key: 'url', label: 'URL', type: 'text', required: true },
+    { key: 'linkType', label: '유형', type: 'select', options: ['참고자료','도구','커뮤니티','채용','기타'] }
+  ],
+  seminar: [
+    { key: 'title', label: '세미나명', type: 'text', required: true, isTitle: true },
+    { key: 'desc', label: '설명', type: 'textarea' },
+    { key: 'eventDate', label: '날짜', type: 'text', placeholder: '2026.05.15' },
+    { key: 'eventTime', label: '시간', type: 'text', placeholder: '14:00~16:00' },
+    { key: 'location', label: '장소', type: 'text' },
+    { key: 'speaker', label: '강사', type: 'text' },
+    { key: 'capacity', label: '정원', type: 'text' },
+    { key: 'fee', label: '참가비', type: 'text' },
+    { key: 'videoUrl', label: '영상 링크', type: 'text' }
+  ],
+  trend: [
+    { key: 'title', label: '제목', type: 'text', required: true, isTitle: true },
+    { key: 'desc', label: '내용', type: 'textarea' },
+    { key: 'source', label: '출처', type: 'text' },
+    { key: 'url', label: '원문 링크', type: 'text' }
+  ],
+  promo: [
+    { key: 'title', label: '프로모션명', type: 'text', required: true, isTitle: true },
+    { key: 'desc', label: '설명', type: 'textarea' },
+    { key: 'startDate', label: '시작일', type: 'date' },
+    { key: 'endDate', label: '종료일', type: 'date' },
+    { key: 'discount', label: '할인/혜택', type: 'text' }
+  ],
+  mentor: [
+    { key: 'title', label: '이름', type: 'text', required: true, isTitle: true },
+    { key: 'desc', label: '소개', type: 'textarea' },
+    { key: 'specialty', label: '전문 분야', type: 'text' },
+    { key: 'career', label: '주요 경력', type: 'textarea' },
+    { key: 'contact', label: '연락처/SNS', type: 'text' },
+    { key: 'videoUrl', label: '소개 영상', type: 'text' }
+  ]
+};
+
+/* ============ Helpers ============ */
+function uid() { return Date.now() + '-' + Math.floor(Math.random()*10000); }
+function showSync(text) {
+  const el = document.getElementById('sync');
+  if (!el) return;
+  el.textContent = text || 'Saved';
+  el.classList.add('show');
+  clearTimeout(showSync._t);
+  showSync._t = setTimeout(()=>el.classList.remove('show'), 1400);
+}
+function getYouTubeId(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);
+  return m ? m[1] : null;
+}
+function getYouTubeThumb(url) {
+  const id = getYouTubeId(url);
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+}
+function isImageFile(name) { return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name||''); }
+function isVideoFile(name) { return /\.(mp4|webm|mov|m4v)$/i.test(name||''); }
+function isPdfFile(name) { return /\.pdf$/i.test(name||''); }
+function fmtDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('ko-KR', { year:'numeric', month:'short', day:'numeric' });
+}
+function getSectionMeta(key) { return SECTIONS.find(s => s.key === key) || {}; }
+function pickThumb(item) {
+  // priority: explicit thumb > first image file > youtube thumb > first file image
+  if (item.thumbUrl) return item.thumbUrl;
+  const files = item.files || [];
+  const img = files.find(f => isImageFile(f.name));
+  if (img && img.directUrl) return img.directUrl;
+  const yt = getYouTubeThumb(item.videoUrl);
+  if (yt) return yt;
+  return null;
+}
+
+/* ============ Data Layer ============ */
+const Store = {
+  defaultHome() {
+    return {
+      eyebrow: 'Consultation Library',
+      titleLine1: '창의적인 시작,',
+      titleLine2: '완성으로 가는 길',
+      titleEm: '완성으로 가는 길',
+      tagline: '영상 · 디자인 · 게임 · AI 분야의 모든 자료를 한 곳에.\n상담실 전용 큐레이션 라이브러리.',
+      meta: 'EST. SBS Academy · Computer Art'
+    };
+  },
+  defaultData() {
+    const sd = {};
+    SECTIONS.forEach(s => { if (!s.special) sd[s.key] = { subCategories: [], items: [] }; });
+    return { sectionData: sd, favorites: [], homeContent: this.defaultHome(), settings: {} };
+  },
+  ensureShape(d) {
+    d = d || this.defaultData();
+    d.sectionData = d.sectionData || {};
+    SECTIONS.forEach(s => {
+      if (s.special) return;
+      if (!d.sectionData[s.key]) d.sectionData[s.key] = { subCategories: [], items: [] };
+      d.sectionData[s.key].subCategories = d.sectionData[s.key].subCategories || [];
+      d.sectionData[s.key].items = d.sectionData[s.key].items || [];
+    });
+    d.favorites = d.favorites || [];
+    d.homeContent = Object.assign(this.defaultHome(), d.homeContent || {});
+    d.settings = d.settings || {};
+    return d;
+  },
+  async load() {
+    try {
+      const snap = await DOC_REF.get();
+      if (snap.exists) return this.ensureShape(snap.data());
+      return this.defaultData();
+    } catch(e) {
+      console.error('load error', e);
+      throw e;
+    }
+  },
+  async save(data) {
+    try {
+      await DOC_REF.set(data, { merge: false });
+      showSync('동기화 완료');
+    } catch(e) {
+      console.error('save error', e);
+      alert('저장 실패: ' + (e.message || e));
+      throw e;
+    }
+  },
+  async uploadFile(file, onProgress) {
+    const id = uid();
+    const safeName = file.name.replace(/[^\w.\-가-힣 ]/g, '_');
+    const path = `files/${id}/${safeName}`;
+    const ref = fbStorage.ref(path);
+    const task = ref.put(file);
+    return new Promise((resolve, reject) => {
+      task.on('state_changed',
+        (snap) => {
+          if (onProgress) onProgress(snap.bytesTransferred / snap.totalBytes);
+        },
+        (err) => reject(err),
+        async () => {
+          try {
+            const url = await task.snapshot.ref.getDownloadURL();
+            resolve({
+              id: id,
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              path: path,
+              directUrl: url
+            });
+          } catch(e) { reject(e); }
+        }
+      );
+    });
+  },
+  async deleteFile(file) {
+    if (!file || !file.path) return;
+    try { await fbStorage.ref(file.path).delete(); } catch(e) { /* ignore */ }
+  }
+};
+
+
+/* ============ Components ============ */
+
+/* PDF Viewer */
+function PdfPreview({ url }) {
+  const containerRef = useRef(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const container = containerRef.current;
+    if (!container || !window.pdfjsLib) return;
+    container.innerHTML = '';
+    setError(null);
+    (async () => {
+      try {
+        const pdf = await window.pdfjsLib.getDocument({ url, withCredentials: false }).promise;
+        if (cancelled) return;
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          if (cancelled) return;
+          container.appendChild(canvas);
+        }
+      } catch(e) {
+        console.error(e);
+        if (!cancelled) setError('PDF를 불러올 수 없습니다.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [url]);
+  if (error) return <div className="modal-preview-empty"><p>{error}</p></div>;
+  return <div className="pdf-pages" ref={containerRef}></div>;
+}
+
+/* Card */
+function Card({ item, sectionKey, onOpen, onToggleFav, onEdit, onDelete, isFav, editMode, subCatName }) {
+  const thumb = pickThumb(item);
+  return (
+    <div className="card" onClick={() => onOpen(item)}>
+      <div className="card-thumb">
+        {thumb ? (
+          <img src={thumb} alt="" loading="lazy" />
+        ) : (
+          <span className="card-thumb-placeholder">{(item.title || '?').slice(0,1).toUpperCase()}</span>
+        )}
+        <button
+          className={'card-fav ' + (isFav ? 'active' : '')}
+          onClick={(e) => { e.stopPropagation(); onToggleFav(item); }}
+          aria-label="즐겨찾기"
+        >
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+        </button>
+      </div>
+      <div className="card-body card-body-compact">
+        <div className="card-title">{item.title || '제목 없음'}</div>
+        {editMode && (
+          <div className="card-edit-actions">
+            <button className="card-edit-btn"
+              onClick={(e)=>{e.stopPropagation();onEdit(item);}} title="편집">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75z"/><path d="M14.06 6.19l3.75 3.75"/>
+              </svg>
+            </button>
+            <button className="card-edit-btn"
+              onClick={(e)=>{e.stopPropagation();onDelete(item);}} title="삭제">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* Preview Modal */
+function PreviewModal({ item, sectionKey, onClose, onEdit, isFav, onToggleFav, editMode }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
+  }, [onClose]);
+
+  if (!item) return null;
+  const fields = SECTION_FIELDS[sectionKey] || [];
+  const sectionMeta = getSectionMeta(sectionKey);
+  const files = item.files || [];
+  const ytId = getYouTubeId(item.videoUrl);
+  const imageFiles = files.filter(f => isImageFile(f.name));
+  const videoFiles = files.filter(f => isVideoFile(f.name));
+  const pdfFiles = files.filter(f => isPdfFile(f.name));
+  const otherFiles = files.filter(f => !isImageFile(f.name) && !isVideoFile(f.name) && !isPdfFile(f.name));
+
+  // Choose primary preview
+  let preview = null;
+  if (ytId) {
+    preview = <iframe src={`https://www.youtube.com/embed/${ytId}?autoplay=0&rel=0`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
+  } else if (videoFiles.length > 0) {
+    preview = <video src={videoFiles[0].directUrl} controls />;
+  } else if (pdfFiles.length > 0) {
+    preview = <PdfPreview url={pdfFiles[0].directUrl} />;
+  } else if (imageFiles.length > 0) {
+    preview = <img src={imageFiles[0].directUrl} alt="" />;
+  } else if (item.videoUrl && /\.(mp4|webm|mov)/i.test(item.videoUrl)) {
+    preview = <video src={item.videoUrl} controls />;
+  } else {
+    preview = (
+      <div className="modal-preview-empty">
+        <div className="mark">{(item.title || '?').slice(0,1)}</div>
+        <p>표시할 미디어가 없습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="modal" onClick={onClose}>
+      <div className="modal-header" onClick={(e)=>e.stopPropagation()}>
+        <div className="modal-title-block">
+          <div className="modal-eyebrow">{sectionMeta.name}</div>
+          <div className="modal-title">{item.title || '제목 없음'}</div>
+        </div>
+        <div className="modal-actions">
+          <button className="modal-btn" onClick={() => onToggleFav(item)}>
+            {isFav ? '★ 즐겨찾기' : '☆ 즐겨찾기'}
+          </button>
+          {editMode && (
+            <button className="modal-btn" onClick={() => onEdit(item)}>편집</button>
+          )}
+          <button className="modal-btn close" onClick={onClose}>✕ 닫기</button>
+        </div>
+      </div>
+      <div className="modal-body" onClick={(e)=>e.stopPropagation()}>
+        <div className="modal-preview">{preview}</div>
+        <div className="modal-info">
+          {item.desc && (
+            <div className="info-section">
+              <div className="info-label">설명</div>
+              <div className="info-value serif">{item.desc}</div>
+            </div>
+          )}
+          {fields.filter(f => !f.isTitle && f.key !== 'desc').map(f => {
+            const v = item[f.key];
+            if (!v) return null;
+            return (
+              <div className="info-section" key={f.key}>
+                <div className="info-label">{f.label}</div>
+                <div className="info-value">
+                  {f.key.includes('url') || f.key.includes('Url')
+                    ? <a href={v} target="_blank" rel="noopener noreferrer">{v}</a>
+                    : v}
+                </div>
+              </div>
+            );
+          })}
+          {(imageFiles.length > 1 || videoFiles.length > 1 || pdfFiles.length > 1 || otherFiles.length > 0) && (
+            <div className="info-section">
+              <div className="info-label">첨부 파일 ({files.length})</div>
+              <div className="info-value">
+                {files.map(f => (
+                  <div key={f.id} style={{padding:'8px 0',borderBottom:'1px solid rgba(244,239,230,0.08)'}}>
+                    <a href={f.directUrl} target="_blank" rel="noopener noreferrer">{f.name}</a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {item.updatedAt && (
+            <div className="info-section">
+              <div className="info-label">최종 수정</div>
+              <div className="info-value">{fmtDate(item.updatedAt)}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* Edit Form Modal */
+function EditModal({ item, sectionKey, subCategories, onClose, onSave, onSubCatAdd }) {
+  const isNew = !item || !item.id;
+  const fields = SECTION_FIELDS[sectionKey] || [];
+  const [form, setForm] = useState(() => {
+    const f = {};
+    fields.forEach(field => { f[field.key] = (item && item[field.key]) || ''; });
+    f.subId = (item && item.subId) || (subCategories[0] && subCategories[0].id) || '';
+    f.files = (item && item.files) ? [...item.files] : [];
+    return f;
+  });
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  function setField(key, val) { setForm(prev => ({ ...prev, [key]: val })); }
+
+  async function handleFiles(filesArr) {
+    if (!filesArr || filesArr.length === 0) return;
+    setUploading(true);
+    setProgress(0);
+    try {
+      const newFiles = [];
+      for (let i = 0; i < filesArr.length; i++) {
+        const f = filesArr[i];
+        const result = await Store.uploadFile(f, p => setProgress(p));
+        newFiles.push(result);
+      }
+      setForm(prev => ({ ...prev, files: [...(prev.files||[]), ...newFiles] }));
+    } catch(e) {
+      alert('업로드 실패: ' + (e.message || e));
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
+  }
+
+  function removeFile(fileId) {
+    setForm(prev => ({ ...prev, files: prev.files.filter(f => f.id !== fileId) }));
+  }
+
+  function submit() {
+    const titleField = fields.find(f => f.isTitle);
+    if (titleField && !form[titleField.key]) {
+      alert(titleField.label + '을(를) 입력하세요.');
+      return;
+    }
+    onSave({
+      ...item,
+      ...form,
+      id: item && item.id ? item.id : uid(),
+      updatedAt: Date.now()
+    });
+  }
+
+  const titleField = fields.find(f => f.isTitle) || fields[0];
+
+  return (
+    <div className="form-modal" onClick={onClose}>
+      <div className="form-frame" onClick={(e)=>e.stopPropagation()}>
+        <div className="form-header">
+          <h3>{isNew ? '새 자료 등록' : '자료 편집'}</h3>
+          <button className="form-close" onClick={onClose}>×</button>
+        </div>
+        <div className="form-body">
+          {/* Sub category selector */}
+          {subCategories.length > 0 && (
+            <div className="field">
+              <label>분류</label>
+              <select value={form.subId} onChange={e => setField('subId', e.target.value)}>
+                {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          {fields.map(f => (
+            <div className="field" key={f.key}>
+              <label>{f.label} {f.required && <span className="required">*</span>}</label>
+              {f.type === 'textarea' ? (
+                <textarea
+                  value={form[f.key] || ''}
+                  onChange={e => setField(f.key, e.target.value)}
+                  placeholder={f.placeholder || ''}
+                />
+              ) : f.type === 'select' ? (
+                <select value={form[f.key] || ''} onChange={e => setField(f.key, e.target.value)}>
+                  <option value="">선택</option>
+                  {(f.options||[]).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              ) : (
+                <input
+                  type={f.type === 'date' ? 'date' : 'text'}
+                  value={form[f.key] || ''}
+                  onChange={e => setField(f.key, e.target.value)}
+                  placeholder={f.placeholder || ''}
+                />
+              )}
+            </div>
+          ))}
+
+          {/* Files */}
+          <div className="field">
+            <label>첨부 파일 (이미지 / PDF / 영상)</label>
+            <div
+              className={'file-drop ' + (dragging ? 'dragging' : '')}
+              onDragOver={(e)=>{e.preventDefault();setDragging(true);}}
+              onDragLeave={()=>setDragging(false)}
+              onDrop={(e)=>{
+                e.preventDefault();
+                setDragging(false);
+                handleFiles(e.dataTransfer.files);
+              }}
+            >
+              <div className="mark">+</div>
+              <p>파일을 끌어다 놓거나 버튼으로 선택하세요</p>
+              <button onClick={()=>fileInputRef.current && fileInputRef.current.click()} disabled={uploading}>
+                {uploading ? `업로드 ${Math.round(progress*100)}%` : '파일 선택'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                style={{display:'none'}}
+                onChange={(e)=>handleFiles(e.target.files)}
+              />
+            </div>
+            {form.files && form.files.length > 0 && (
+              <div className="file-list">
+                {form.files.map(f => (
+                  <div className="file-row" key={f.id}>
+                    <span className="name">{f.name}</span>
+                    <button onClick={()=>removeFile(f.id)} title="삭제">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="form-foot">
+          <div className="left">
+            {subCategories.length === 0 && (
+              <button className="btn ghost" onClick={onSubCatAdd}>+ 분류 추가</button>
+            )}
+          </div>
+          <div className="right">
+            <button className="btn ghost" onClick={onClose}>취소</button>
+            <button className="btn amber" onClick={submit} disabled={uploading}>
+              {isNew ? '등록' : '저장'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Confirm dialog */
+/* ============ Media Preview (single-file fullscreen) ============ */
+function MediaPreview({ file, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
+  }, [onClose]);
+
+  if (!file) return null;
+  const url = file.directUrl;
+  const mediaStyle = { maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', objectFit: 'contain', display: 'block', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' };
+  let body;
+  if (isImageFile(file.name)) {
+    body = <img src={url} alt={file.name} style={mediaStyle} />;
+  } else if (isVideoFile(file.name)) {
+    body = <video src={url} controls autoPlay style={mediaStyle} />;
+  } else if (isPdfFile(file.name)) {
+    body = (
+      <div className="modal-preview-empty" style={{padding: 40}}>
+        <div className="mark">📄</div>
+        <p style={{marginBottom: 8, color: 'var(--on-dark)', fontSize: 16, fontWeight: 600}}>{file.name}</p>
+        <p style={{marginBottom: 20, color: 'var(--on-dark-muted)', fontSize: 13}}>PDF 파일은 새 창에서 열어 보세요.</p>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            padding: '10px 22px',
+            background: 'var(--amber-soft)',
+            color: 'var(--dark)',
+            textDecoration: 'none',
+            fontSize: 12,
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            fontWeight: 600
+          }}
+        >↗ 새 창에서 열기</a>
+      </div>
+    );
+  } else {
+    body = (
+      <div className="modal-preview-empty">
+        <div className="mark">?</div>
+        <p style={{marginBottom: 16}}>이 파일은 미리보기가 지원되지 않습니다.</p>
+        <a href={url} target="_blank" rel="noopener noreferrer" style={{color:'var(--amber-soft)'}}>새 창에서 열기 →</a>
+      </div>
+    );
+  }
+  return (
+    <div className="modal" onClick={onClose}>
+      <div className="modal-header" onClick={e => e.stopPropagation()}>
+        <div className="modal-title-block">
+          <div className="modal-eyebrow">파일</div>
+          <div className="modal-title">{file.name}</div>
+        </div>
+        <div className="modal-actions">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="modal-btn">↗ 새 창</a>
+          <button className="modal-btn close" onClick={onClose}>✕ 닫기</button>
+        </div>
+      </div>
+      <div style={{flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, background: 'var(--dark-soft)'}} onClick={e => e.stopPropagation()}>
+        <div style={{maxWidth: '100%', maxHeight: '100%'}}>{body}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ Rich Editor ============ */
+function RichEditor({ value, onChange, placeholder }) {
+  const ref = useRef(null);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (ref.current && !initialized.current) {
+      ref.current.innerHTML = value || '';
+      initialized.current = true;
+    }
+  }, []);
+
+  // Sync if value changes externally
+  useEffect(() => {
+    if (ref.current && initialized.current && document.activeElement !== ref.current) {
+      if (ref.current.innerHTML !== (value || '')) {
+        ref.current.innerHTML = value || '';
+      }
+    }
+  }, [value]);
+
+  function exec(cmd, arg) {
+    document.execCommand(cmd, false, arg || null);
+    ref.current.focus();
+    handleInput();
+  }
+
+  function handleInput() {
+    if (ref.current && onChange) {
+      onChange(ref.current.innerHTML);
+    }
+  }
+
+  function handleHeading(level) {
+    document.execCommand('formatBlock', false, level);
+    ref.current.focus();
+    handleInput();
+  }
+
+  function handleLink() {
+    const url = prompt('링크 URL을 입력하세요', 'https://');
+    if (url && url !== 'https://') exec('createLink', url);
+  }
+
+  function handlePaste(e) {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  }
+
+  return (
+    <>
+      <div className="editor-toolbar">
+        <button className="toolbar-btn h1" onClick={() => handleHeading('h1')} title="큰 제목">H1</button>
+        <button className="toolbar-btn h1" onClick={() => handleHeading('h2')} title="중제목">H2</button>
+        <button className="toolbar-btn h1" onClick={() => handleHeading('h3')} title="소제목">H3</button>
+        <button className="toolbar-btn" onClick={() => handleHeading('p')} title="본문">¶</button>
+        <span className="toolbar-sep"></span>
+        <button className="toolbar-btn" onClick={() => exec('bold')} title="굵게"><strong>B</strong></button>
+        <button className="toolbar-btn" onClick={() => exec('italic')} title="기울임"><em>I</em></button>
+        <button className="toolbar-btn" onClick={() => exec('underline')} title="밑줄"><u>U</u></button>
+        <span className="toolbar-sep"></span>
+        <button className="toolbar-btn" onClick={() => exec('insertUnorderedList')} title="목록">•</button>
+        <button className="toolbar-btn" onClick={() => exec('insertOrderedList')} title="번호 목록">1.</button>
+        <button className="toolbar-btn" onClick={() => handleHeading('blockquote')} title="강조 인용">"</button>
+        <span className="toolbar-sep"></span>
+        <button className="toolbar-btn" onClick={handleLink} title="링크">🔗</button>
+        <button className="toolbar-btn" onClick={() => exec('removeFormat')} title="서식 지우기">✕</button>
+      </div>
+      <div
+        ref={ref}
+        className="editor"
+        contentEditable
+        data-placeholder={placeholder || '내용을 입력하세요…'}
+        onInput={handleInput}
+        onPaste={handlePaste}
+      />
+    </>
+  );
+}
+
+/* ============ SubCategory Page ============
+   Two modes:
+   - Overview (subSub === 'all'): notion body editor only, no item grid
+   - Board (subSub === id): board page with item grid only, no body
+============================================ */
+function SubCategoryPage({
+  sectionKey, sub, data, editMode,
+  onBack, onSaveSub, onDelete,
+  activeSubSub, setActiveSubSub,
+  subSubCategories,
+  onAddSubSub, onRenameSubSub, onDeleteSubSub,
+  onCardOpen, onToggleFav, isFavId,
+  onCardEdit, onCardDelete,
+  onNewItem,
+  search
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(sub);
+
+  useEffect(() => { setDraft(sub); setEditing(false); }, [sub.id]);
+
+  const sec = data.sectionData[sectionKey] || {};
+  const allItems = sec.items || [];
+  const itemsInSub = allItems.filter(it => String(it.subId) === String(sub.id));
+
+  const isOverview = activeSubSub === 'all';
+  const activeBoard = !isOverview ? subSubCategories.find(ss => String(ss.id) === String(activeSubSub)) : null;
+
+  const filtered = useMemo(() => {
+    if (isOverview) return [];
+    let items = itemsInSub.filter(it => String(it.subSubId || '') === String(activeSubSub));
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      items = items.filter(it => {
+        const body = (it.body || '').replace(/<[^>]*>/g, ' ');
+        const haystack = [it.title, it.desc, body].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+    return items;
+  }, [itemsInSub, activeSubSub, search, isOverview]);
+
+  function setF(key, val) { setDraft(prev => ({ ...prev, [key]: val })); }
+
+  function saveDraft() {
+    if (!draft.name || !draft.name.trim()) {
+      alert('분류 이름을 입력하세요.');
+      return;
+    }
+    onSaveSub({ ...draft, name: draft.name.trim(), updatedAt: Date.now() });
+    setEditing(false);
+  }
+
+  return (
+    <div className="subcat-page">
+      <div className="detail-topbar">
+        <div className="breadcrumb">
+          <span className="crumb" onClick={onBack}>{getSectionMeta(sectionKey).name}</span>
+          <span className="sep">›</span>
+          {isOverview ? (
+            <span className="current">{sub.name}</span>
+          ) : (
+            <>
+              <span className="crumb" onClick={() => setActiveSubSub('all')}>{sub.name}</span>
+              <span className="sep">›</span>
+              <span className="current">{activeBoard ? activeBoard.name : ''}</span>
+            </>
+          )}
+        </div>
+        <div className="detail-actions">
+          {isOverview && editMode && !editing && (
+            <button className="detail-btn" onClick={() => setEditing(true)}>분류 편집</button>
+          )}
+          {isOverview && editing && (
+            <>
+              <button className="detail-btn" onClick={() => { setDraft(sub); setEditing(false); }}>취소</button>
+              <button className="detail-btn amber" onClick={saveDraft}>저장</button>
+            </>
+          )}
+          {isOverview && editMode && !editing && (
+            <button className="detail-btn danger" onClick={() => onDelete(sub)}>분류 삭제</button>
+          )}
+          {!isOverview && editMode && (
+            <button className="detail-btn amber" onClick={onNewItem}>+ 새 자료</button>
+          )}
+          {!isOverview && editMode && (
+            <button
+              className="detail-btn"
+              onClick={() => {
+                const action = prompt('1: 이름 변경 / 2: 게시판 삭제', '1');
+                if (action === '1') onRenameSubSub(activeBoard);
+                else if (action === '2') onDeleteSubSub(activeBoard);
+              }}
+            >게시판</button>
+          )}
+        </div>
+      </div>
+
+      <div className="subcat-page-body">
+        {isOverview ? (
+          /* === OVERVIEW MODE: notion body only === */
+          <>
+            <div className="detail-eyebrow">{getSectionMeta(sectionKey).name}</div>
+
+            {editing ? (
+              <input
+                className="detail-title-input"
+                value={draft.name || ''}
+                onChange={e => setF('name', e.target.value)}
+                placeholder="분류 이름"
+              />
+            ) : (
+              <h1 className="detail-title">{sub.name}</h1>
+            )}
+
+            {(editing || sub.tagline) && (
+              <div className="props">
+                <div className="props-row">
+                  <div className="props-label">한 줄 소개</div>
+                  <div className="props-value">
+                    {editing ? (
+                      <input
+                        type="text"
+                        value={draft.tagline || ''}
+                        onChange={e => setF('tagline', e.target.value)}
+                        placeholder="예: 출판물 · 잡지 · 브랜딩"
+                      />
+                    ) : (sub.tagline || '')}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="body-section" style={{marginTop: 8}}>
+              {editing ? (
+                <RichEditor
+                  value={draft.body || ''}
+                  onChange={(html) => setF('body', html)}
+                  placeholder="이 분류 소개를 자유롭게 작성하세요. 좌측 사이드바에서 사진/영상/링크 게시판을 추가할 수 있습니다."
+                />
+              ) : sub.body ? (
+                <div className="body-readonly" dangerouslySetInnerHTML={{ __html: sub.body }} />
+              ) : (
+                <div className="empty" style={{padding: '40px 20px', textAlign: 'left'}}>
+                  <div className="empty-text" style={{textAlign: 'left', maxWidth: 'none'}}>
+                    {editMode
+                      ? '"분류 편집" 버튼을 눌러 분류 소개를 작성하세요. 좌측 사이드바의 "+ 게시판"으로 사진/영상/링크 등 게시판을 만들 수 있습니다.'
+                      : '아직 분류 소개가 작성되지 않았습니다.'}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 게시판 만들기 버튼 (편집 모드, overview에서만) */}
+            {editMode && subSubCategories.length === 0 && (
+              <div style={{marginTop: 32, padding: 20, border: '1px dashed var(--line-strong)', textAlign: 'center', color: 'var(--muted)'}}>
+                아직 게시판이 없습니다.
+                <button
+                  className="detail-btn"
+                  style={{marginLeft: 12}}
+                  onClick={onAddSubSub}
+                >+ 게시판 추가 (사진/영상/링크 등)</button>
+              </div>
+            )}
+            {editMode && subSubCategories.length > 0 && (
+              <div style={{marginTop: 32, fontSize: 12, color: 'var(--muted)'}}>
+                게시판 {subSubCategories.length}개 — 좌측 사이드바에서 클릭하여 진입하세요.
+                <button
+                  className="detail-btn"
+                  style={{marginLeft: 12, padding: '4px 10px', fontSize: 10}}
+                  onClick={onAddSubSub}
+                >+ 게시판</button>
+              </div>
+            )}
+          </>
+        ) : (
+          /* === BOARD MODE: item grid only === */
+          <>
+            <div className="detail-eyebrow">{sub.name}</div>
+            <h1 className="detail-title" style={{marginBottom: 18}}>
+              {activeBoard ? activeBoard.name : '게시판'}
+            </h1>
+            <div style={{fontSize: 13, color: 'var(--muted)', marginBottom: 24}}>
+              {filtered.length}건
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="empty">
+                <div className="empty-mark">∅</div>
+                <div className="empty-title">자료가 없습니다</div>
+                <div className="empty-text">
+                  {editMode ? '+ 새 자료 버튼으로 등록하세요.' : '편집 모드에서 자료를 등록할 수 있습니다.'}
+                </div>
+              </div>
+            ) : (
+              <div className="grid">
+                {filtered.map(item => (
+                  <Card
+                    key={item.id}
+                    item={item}
+                    sectionKey={sectionKey}
+                    onOpen={(it)=>onCardOpen({...it, _section: sectionKey})}
+                    onToggleFav={onToggleFav}
+                    isFav={isFavId(item.id)}
+                    onEdit={(it)=>onCardEdit({...it, _section: sectionKey})}
+                    onDelete={(it)=>onCardDelete({...it, _section: sectionKey})}
+                    editMode={editMode}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+/* ============ Detail Page ============ */
+function Detail({ item, sectionKey, data, onClose, onSave, onDelete, onToggleFav, isFav, onPreviewMedia, editMode }) {
+  const sectionMeta = getSectionMeta(sectionKey);
+  const fields = SECTION_FIELDS[sectionKey] || [];
+  const titleField = fields.find(f => f.isTitle) || fields[0];
+
+  const [editing, setEditing] = useState(item._isNew || false);
+  const [draft, setDraft] = useState(item);
+
+  useEffect(() => { setDraft(item); }, [item]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [item.id]);
+
+  const sub = useMemo(() => {
+    const subs = (data.sectionData[sectionKey] && data.sectionData[sectionKey].subCategories) || [];
+    return subs.find(s => String(s.id) === String(item.subId));
+  }, [data, sectionKey, item]);
+
+  const subSub = useMemo(() => {
+    if (!sub) return null;
+    const subSubs = sub.subSubCategories || [];
+    return subSubs.find(s => String(s.id) === String(item.subSubId));
+  }, [sub, item]);
+
+  function setF(key, val) { setDraft(prev => ({ ...prev, [key]: val })); }
+
+  function saveDraft() {
+    if (!draft[titleField.key]) {
+      alert(titleField.label + '을(를) 입력하세요.');
+      return;
+    }
+    onSave({ ...draft, updatedAt: Date.now() });
+    setEditing(false);
+  }
+
+  function cancelEdit() {
+    setDraft(item);
+    setEditing(false);
+  }
+
+  const files = (editing ? draft.files : item.files) || [];
+  const fileInputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadFiles(filesArr) {
+    if (!filesArr || filesArr.length === 0) return;
+    setUploading(true);
+    try {
+      const newFiles = [];
+      for (let i = 0; i < filesArr.length; i++) {
+        const result = await Store.uploadFile(filesArr[i]);
+        newFiles.push(result);
+      }
+      setDraft(prev => ({ ...prev, files: [...(prev.files || []), ...newFiles] }));
+    } catch(e) {
+      alert('업로드 실패: ' + (e.message || e));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeFile(fileId) {
+    setDraft(prev => ({ ...prev, files: (prev.files || []).filter(f => f.id !== fileId) }));
+  }
+
+  return (
+    <div className="detail">
+      <div className="detail-topbar">
+        <div className="breadcrumb">
+          <span className="crumb" onClick={onClose}>{sectionMeta.name}</span>
+          {sub && <>
+            <span className="sep">›</span>
+            <span className="crumb">{sub.name}</span>
+          </>}
+          {subSub && <>
+            <span className="sep">›</span>
+            <span className="crumb">{subSub.name}</span>
+          </>}
+          <span className="sep">›</span>
+          <span className="current">{item[titleField.key] || '제목 없음'}</span>
+        </div>
+        <div className="detail-actions">
+          <button
+            className={'detail-btn fav ' + (isFav ? 'active' : '')}
+            onClick={() => onToggleFav(item)}
+            title="즐겨찾기"
+          >{isFav ? '★' : '☆'}</button>
+          {editMode && !editing && (
+            <button className="detail-btn" onClick={() => setEditing(true)}>편집</button>
+          )}
+          {editing && (
+            <>
+              <button className="detail-btn" onClick={cancelEdit}>취소</button>
+              <button className="detail-btn amber" onClick={saveDraft}>저장</button>
+            </>
+          )}
+          {editMode && !editing && (
+            <button className="detail-btn danger" onClick={() => onDelete(item)}>삭제</button>
+          )}
+          <button className="detail-btn" onClick={onClose}>← 돌아가기</button>
+        </div>
+      </div>
+
+      <div className="detail-cover"></div>
+
+      <div className="detail-body">
+        <div className="detail-eyebrow">
+          {sectionMeta.name}{sub ? ' · ' + sub.name : ''}{subSub ? ' · ' + subSub.name : ''}
+        </div>
+
+        {editing ? (
+          <input
+            className="detail-title-input"
+            value={draft[titleField.key] || ''}
+            onChange={e => setF(titleField.key, e.target.value)}
+            placeholder={titleField.label}
+          />
+        ) : (
+          <h1 className="detail-title">{item[titleField.key] || '제목 없음'}</h1>
+        )}
+
+        {/* Properties */}
+        <div className="props">
+          {fields.filter(f => !f.isTitle && f.key !== 'desc').map(f => {
+            const v = editing ? draft[f.key] : item[f.key];
+            if (!editing && !v) return null;
+            return (
+              <div className="props-row" key={f.key}>
+                <div className="props-label">{f.label}{f.required && editing ? ' *' : ''}</div>
+                <div className="props-value">
+                  {editing ? (
+                    f.type === 'textarea' ? (
+                      <textarea value={v || ''} onChange={e => setF(f.key, e.target.value)} placeholder={f.placeholder || ''} />
+                    ) : f.type === 'select' ? (
+                      <select value={v || ''} onChange={e => setF(f.key, e.target.value)}>
+                        <option value="">선택</option>
+                        {(f.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    ) : (
+                      <input
+                        type={f.type === 'date' ? 'date' : 'text'}
+                        value={v || ''}
+                        onChange={e => setF(f.key, e.target.value)}
+                        placeholder={f.placeholder || ''}
+                      />
+                    )
+                  ) : (
+                    f.key.toLowerCase().includes('url') && v ? (
+                      <a href={v} target="_blank" rel="noopener noreferrer">{v}</a>
+                    ) : v
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {/* Description short */}
+          {(editing || item.desc) && (
+            <div className="props-row">
+              <div className="props-label">한줄 설명</div>
+              <div className="props-value">
+                {editing ? (
+                  <textarea value={draft.desc || ''} onChange={e => setF('desc', e.target.value)} placeholder="짧은 설명" />
+                ) : item.desc}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Body content */}
+        <div className="body-section">
+          <div className="body-label">— 본문 내용</div>
+          {editing ? (
+            <RichEditor
+              value={draft.body || ''}
+              onChange={(html) => setF('body', html)}
+              placeholder="자유롭게 작성하세요. 헤딩·목록·강조·링크 등을 사용할 수 있습니다."
+            />
+          ) : (
+            item.body
+              ? <div className="body-readonly" dangerouslySetInnerHTML={{ __html: item.body }} />
+              : null
+          )}
+        </div>
+
+        {/* Files */}
+        {(editing || files.length > 0) && (
+          <div className="detail-media">
+            <div className="body-label">— 첨부 파일 ({files.length})</div>
+            {editing && (
+              <div style={{marginBottom: 12}}>
+                <button
+                  className="detail-btn"
+                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                  disabled={uploading}
+                >{uploading ? '업로드 중…' : '+ 파일 추가'}</button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  style={{display: 'none'}}
+                  onChange={e => uploadFiles(e.target.files)}
+                />
+              </div>
+            )}
+            {files.length > 0 && (
+              <div className="detail-media-grid">
+                {files.map(f => {
+                  const isImg = isImageFile(f.name);
+                  const isVid = isVideoFile(f.name);
+                  const isPdf = isPdfFile(f.name);
+                  function handleClick() {
+                    if (isImg || isVid) {
+                      onPreviewMedia(f);
+                    } else if (f.directUrl) {
+                      // PDF and others: open in new tab
+                      window.open(f.directUrl, '_blank', 'noopener,noreferrer');
+                    }
+                  }
+                  return (
+                    <div key={f.id} className="detail-media-item">
+                      <div className="detail-media-thumb" onClick={handleClick}>
+                        {isImg && f.directUrl
+                          ? <img src={f.directUrl} alt="" />
+                          : isVid ? '🎬'
+                          : isPdf ? '📄'
+                          : '📎'}
+                      </div>
+                      <div className="detail-media-info">
+                        <div className="type">
+                          {isImg ? '이미지' : isVid ? '영상' : isPdf ? 'PDF' : '파일'}
+                        </div>
+                        <div className="name" title={f.name}>{f.name}</div>
+                        {(isPdf || (!isImg && !isVid)) && f.directUrl && (
+                          <a
+                            href={f.directUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{display:'inline-block', marginTop:4, fontSize:10, color:'var(--amber)', textDecoration:'none', borderBottom:'1px solid rgba(184,132,45,0.3)'}}
+                          >새 창에서 열기 →</a>
+                        )}
+                        {editing && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeFile(f.id); }}
+                            style={{marginTop:4, marginLeft:8, fontSize:10, background:'transparent', border:'none', color:'var(--rose)', cursor:'pointer', padding: 0}}
+                          >삭제</button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+function Confirm({ title, text, onConfirm, onCancel, danger }) {
+  return (
+    <div className="confirm-overlay" onClick={onCancel}>
+      <div className="confirm-box" onClick={(e)=>e.stopPropagation()}>
+        <div className="confirm-title">{title}</div>
+        <div className="confirm-text">{text}</div>
+        <div className="confirm-actions">
+          <button className="btn ghost" onClick={onCancel}>취소</button>
+          <button className={'btn ' + (danger ? '' : 'amber')} onClick={onConfirm}>
+            {danger ? '삭제' : '확인'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ Home Page ============ */
+function Home({ data, sectionCounts, onSelectSection, editMode, onSaveHome, totalItems, totalFavs }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(data.homeContent);
+
+  function startEdit() {
+    setDraft(data.homeContent);
+    setEditing(true);
+  }
+  function cancelEdit() { setEditing(false); }
+  async function saveEdit() {
+    await onSaveHome(draft);
+    setEditing(false);
+  }
+
+  function setField(k, v) { setDraft(prev => ({ ...prev, [k]: v })); }
+
+  const home = editing ? draft : data.homeContent;
+
+  // Render title with em-emphasis
+  function renderTitle() {
+    const { titleLine1, titleLine2, titleEm } = home;
+    // If titleEm matches part of titleLine2, italic-amber that part
+    if (titleEm && titleLine2 && titleLine2.includes(titleEm)) {
+      const idx = titleLine2.indexOf(titleEm);
+      const before = titleLine2.slice(0, idx);
+      const after = titleLine2.slice(idx + titleEm.length);
+      return (
+        <>
+          {titleLine1}<br/>
+          {before}<em>{titleEm}</em>{after}
+        </>
+      );
+    }
+    return <>{titleLine1}<br/>{titleLine2}</>;
+  }
+
+  return (
+    <div className="home">
+      <div className="home-orbit"></div>
+      <div className="home-inner">
+
+        <div className="home-topbar">
+          <span>{home.meta}</span>
+          <div className="right">
+            <span>2026 · Seoul</span>
+            {editMode && !editing && (
+              <button
+                onClick={startEdit}
+                style={{background:'transparent',border:'1px solid var(--line-strong)',color:'var(--ink)',padding:'5px 12px',fontSize:'10px',letterSpacing:'.2em',textTransform:'uppercase',cursor:'pointer',fontWeight:500}}
+              >메인 수정</button>
+            )}
+          </div>
+        </div>
+
+        {/* HERO */}
+        <div className="home-hero">
+          {editing ? (
+            <>
+              <input
+                className="home-tagline-edit"
+                style={{fontSize:'11px',letterSpacing:'.35em',textTransform:'uppercase',color:'var(--amber)',marginBottom:'20px'}}
+                value={draft.eyebrow}
+                onChange={(e)=>setField('eyebrow',e.target.value)}
+                placeholder="EYEBROW"
+              />
+              <input
+                className="home-title-edit"
+                style={{fontSize:'40px',marginBottom:'8px'}}
+                value={draft.titleLine1}
+                onChange={(e)=>setField('titleLine1',e.target.value)}
+                placeholder="제목 1행"
+              />
+              <input
+                className="home-title-edit"
+                style={{fontSize:'40px',marginBottom:'8px'}}
+                value={draft.titleLine2}
+                onChange={(e)=>setField('titleLine2',e.target.value)}
+                placeholder="제목 2행"
+              />
+              <input
+                className="home-tagline-edit"
+                style={{fontSize:'12px',marginBottom:'16px',color:'var(--amber-soft)'}}
+                value={draft.titleEm}
+                onChange={(e)=>setField('titleEm',e.target.value)}
+                placeholder="제목 2행 중 강조할 부분 (앰버 색상)"
+              />
+              <textarea
+                className="home-tagline-edit"
+                style={{fontSize:'14px',minHeight:'70px'}}
+                value={draft.tagline}
+                onChange={(e)=>setField('tagline',e.target.value)}
+                placeholder="설명 문구"
+              />
+              <div className="home-edit-actions">
+                <button className="home-edit-btn" onClick={saveEdit}>저장</button>
+                <button className="home-edit-btn ghost" onClick={cancelEdit}>취소</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="home-eyebrow">{home.eyebrow}</div>
+              <h1 className="home-title">{renderTitle()}</h1>
+              <p className="home-tagline">{home.tagline}</p>
+            </>
+          )}
+        </div>
+
+        {/* STATS */}
+        <div className="home-stats">
+          <div>
+            <div className="home-stat-num">{String(SECTIONS.filter(s=>!s.special).length).padStart(2,'0')}</div>
+            <div className="home-stat-label">Categories</div>
+          </div>
+          <div>
+            <div className="home-stat-num">{totalItems}</div>
+            <div className="home-stat-label">Materials</div>
+          </div>
+          <div>
+            <div className="home-stat-num amber">★ {totalFavs}</div>
+            <div className="home-stat-label">Pinned</div>
+          </div>
+        </div>
+
+        {/* SECTION GRID */}
+        <div className="home-section-label">Browse Categories</div>
+        <div className="home-grid">
+          {SECTIONS.map((s, i) => {
+            const count = sectionCounts[s.key] || 0;
+            const isFeatured = s.special; // favorites featured
+            return (
+              <div
+                key={s.key}
+                className={'home-card' + (isFeatured ? ' featured' : '')}
+                onClick={()=>onSelectSection(s.key)}
+              >
+                <div className="home-card-num">
+                  {s.special ? '★' : String(SECTIONS.filter(x=>!x.special).indexOf(s)+1).padStart(2,'0')}
+                </div>
+                {s.special && <div className="home-card-badge">Pinned</div>}
+                <div className="home-card-title">{s.name}</div>
+                <div className="home-card-desc">{s.sub}</div>
+                <div className="home-card-foot">
+                  <span className="home-card-count">{count}건</span>
+                  <span className="arrow">→</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ============ Main App ============ */
+function App() {
+  const [data, setData] = useState(null);
+  const [activeSection, setActiveSection] = useState('home');
+  const [activeSub, setActiveSub] = useState('all');
+  const [activeSubSub, setActiveSubSub] = useState('all');
+  const [search, setSearch] = useState('');
+  const [detailItem, setDetailItem] = useState(null);
+  const [previewItem, setPreviewItem] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+  const [user, setUser] = useState(fbAuth.currentUser);
+
+  // Auth listener
+  useEffect(() => {
+    const unsub = fbAuth.onAuthStateChanged(u => setUser(u));
+    return unsub;
+  }, []);
+
+  // Load data
+  useEffect(() => {
+    Store.load().then(d => setData(d)).catch(e => {
+      alert('데이터 로드 실패: ' + (e.message || e));
+      setData(Store.defaultData());
+    });
+  }, []);
+
+  // Save helper
+  const persist = useCallback(async (next) => {
+    setData(next);
+    await Store.save(next);
+  }, []);
+
+  // Derived: current section data + filtered items
+  const currentSection = useMemo(() => getSectionMeta(activeSection), [activeSection]);
+  const isFavView = activeSection === 'favorites';
+
+  const allItems = useMemo(() => {
+    if (!data) return [];
+    if (isFavView) {
+      const favIds = data.favorites || [];
+      const all = [];
+      Object.keys(data.sectionData).forEach(sk => {
+        (data.sectionData[sk].items || []).forEach(it => {
+          if (favIds.includes(it.id)) all.push({ ...it, _section: sk });
+        });
+      });
+      return all;
+    }
+    const sec = data.sectionData[activeSection];
+    if (!sec) return [];
+    return (sec.items || []).map(it => ({ ...it, _section: activeSection }));
+  }, [data, activeSection, isFavView]);
+
+  const subCategories = useMemo(() => {
+    if (!data || isFavView) return [];
+    const sec = data.sectionData[activeSection];
+    return sec ? (sec.subCategories || []) : [];
+  }, [data, activeSection, isFavView]);
+
+  const activeSubObj = useMemo(() => {
+    if (activeSub === 'all') return null;
+    return subCategories.find(s => String(s.id) === String(activeSub));
+  }, [subCategories, activeSub]);
+
+  const subSubCategories = useMemo(() => {
+    if (!activeSubObj) return [];
+    return activeSubObj.subSubCategories || [];
+  }, [activeSubObj]);
+
+  const filteredItems = useMemo(() => {
+    let items = allItems;
+    if (!isFavView && activeSub !== 'all') {
+      items = items.filter(it => String(it.subId) === String(activeSub));
+      if (activeSubSub !== 'all') {
+        items = items.filter(it => String(it.subSubId || '') === String(activeSubSub));
+      }
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      items = items.filter(it => {
+        const body = (it.body || '').replace(/<[^>]*>/g, ' ');
+        const haystack = [it.title, it.desc, it.author, it.speaker, it.specialty, it.career, it.location, it.source, body]
+          .filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+    return items;
+  }, [allItems, activeSub, activeSubSub, search, isFavView]);
+
+  const sectionCounts = useMemo(() => {
+    const counts = {};
+    if (!data) return counts;
+    SECTIONS.forEach(s => {
+      if (s.special) {
+        counts[s.key] = (data.favorites || []).length;
+      } else {
+        counts[s.key] = ((data.sectionData[s.key] || {}).items || []).length;
+      }
+    });
+    return counts;
+  }, [data]);
+
+  const totalItems = useMemo(() => {
+    if (!data) return 0;
+    return SECTIONS.filter(s => !s.special).reduce((acc, s) => {
+      return acc + (((data.sectionData[s.key] || {}).items || []).length);
+    }, 0);
+  }, [data]);
+
+  const totalFavs = useMemo(() => (data ? (data.favorites || []).length : 0), [data]);
+
+  // Sync detail item with latest data after edits
+  useEffect(() => {
+    if (!detailItem || !data) return;
+    const sk = detailItem._section;
+    const sec = data.sectionData[sk];
+    if (!sec) return;
+    const fresh = (sec.items || []).find(it => String(it.id) === String(detailItem.id));
+    if (fresh && JSON.stringify(fresh) !== JSON.stringify({ ...detailItem, _section: undefined })) {
+      setDetailItem({ ...fresh, _section: sk });
+    }
+  }, [data]);
+
+  // Reset subSub when sub changes
+  useEffect(() => { setActiveSubSub('all'); }, [activeSub]);
+
+  // Reset sub when section changes
+  useEffect(() => { setActiveSub('all'); }, [activeSection]);
+
+  // ============ Actions ============
+  function selectSection(key) {
+    setActiveSection(key);
+    setSidebarOpen(false);
+    // Scroll to top on section change
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+  }
+
+  async function saveHomeContent(homeContent) {
+    await persist({ ...data, homeContent });
+  }
+
+  async function toggleFav(item) {
+    const favs = new Set(data.favorites || []);
+    if (favs.has(item.id)) favs.delete(item.id);
+    else favs.add(item.id);
+    await persist({ ...data, favorites: Array.from(favs) });
+  }
+
+  async function saveItem(item) {
+    const sectionKey = item._section || (editingItem && editingItem._section) || activeSection;
+    if (sectionKey === 'favorites') return;
+    // Strip internal flags that shouldn't be persisted
+    const clean = { ...item };
+    delete clean._section;
+    delete clean._isNew;
+    const next = JSON.parse(JSON.stringify(data));
+    const sec = next.sectionData[sectionKey];
+    sec.items = sec.items || [];
+    const idx = sec.items.findIndex(x => String(x.id) === String(clean.id));
+    if (idx >= 0) sec.items[idx] = clean;
+    else sec.items.push(clean);
+    setEditingItem(null);
+    // Update detail item to reflect saved state (re-attach _section)
+    if (detailItem && String(detailItem.id) === String(clean.id)) {
+      setDetailItem({ ...clean, _section: sectionKey });
+    }
+    await persist(next);
+  }
+
+  async function deleteItem(item) {
+    const sectionKey = item._section || activeSection;
+    setConfirm({
+      title: '자료 삭제',
+      text: `"${item.title || '제목 없음'}"을(를) 삭제하시겠습니까? 첨부 파일도 함께 삭제됩니다.`,
+      danger: true,
+      onConfirm: async () => {
+        setConfirm(null);
+        const next = JSON.parse(JSON.stringify(data));
+        const sec = next.sectionData[sectionKey];
+        const removed = (sec.items || []).find(x => String(x.id) === String(item.id));
+        sec.items = (sec.items || []).filter(x => String(x.id) !== String(item.id));
+        next.favorites = (next.favorites || []).filter(id => id !== item.id);
+        if (removed && removed.files) removed.files.forEach(f => Store.deleteFile(f));
+        // Close detail if showing this item
+        if (detailItem && String(detailItem.id) === String(item.id)) {
+          setDetailItem(null);
+        }
+        await persist(next);
+      }
+    });
+  }
+
+  async function addSubCategory() {
+    const name = prompt('새 분류 이름');
+    if (!name) return;
+    const next = JSON.parse(JSON.stringify(data));
+    const sec = next.sectionData[activeSection];
+    sec.subCategories = sec.subCategories || [];
+    sec.subCategories.push({ id: uid(), name: name.trim() });
+    await persist(next);
+  }
+
+  async function saveSubCategory(updatedSub) {
+    const next = JSON.parse(JSON.stringify(data));
+    const sec = next.sectionData[activeSection];
+    sec.subCategories = (sec.subCategories || []).map(s =>
+      String(s.id) === String(updatedSub.id) ? { ...s, ...updatedSub } : s
+    );
+    await persist(next);
+  }
+
+  async function renameSubCategory(sub) {
+    const name = prompt('분류 이름 수정', sub.name);
+    if (!name || name === sub.name) return;
+    const next = JSON.parse(JSON.stringify(data));
+    const sec = next.sectionData[activeSection];
+    sec.subCategories = sec.subCategories.map(s =>
+      String(s.id) === String(sub.id) ? { ...s, name: name.trim() } : s
+    );
+    await persist(next);
+  }
+
+  async function deleteSubCategory(sub) {
+    setConfirm({
+      title: '분류 삭제',
+      text: `"${sub.name}" 분류와 그 안의 모든 자료를 삭제하시겠습니까?`,
+      danger: true,
+      onConfirm: async () => {
+        setConfirm(null);
+        const next = JSON.parse(JSON.stringify(data));
+        const sec = next.sectionData[activeSection];
+        const itemsToRemove = (sec.items || []).filter(x => String(x.subId) === String(sub.id));
+        itemsToRemove.forEach(it => (it.files || []).forEach(f => Store.deleteFile(f)));
+        const removeIds = new Set(itemsToRemove.map(x => x.id));
+        sec.items = (sec.items || []).filter(x => !removeIds.has(x.id));
+        sec.subCategories = (sec.subCategories || []).filter(s => String(s.id) !== String(sub.id));
+        next.favorites = (next.favorites || []).filter(id => !removeIds.has(id));
+        await persist(next);
+      }
+    });
+  }
+
+  // ------- 3rd tier (subSub) handlers -------
+  async function addSubSubCategory() {
+    if (!activeSubObj) { alert('먼저 2단계 분류를 선택하세요.'); return; }
+    const name = prompt('새 하위 분류 이름 (예: 사진, 영상, 링크)');
+    if (!name) return;
+    const next = JSON.parse(JSON.stringify(data));
+    const sec = next.sectionData[activeSection];
+    sec.subCategories = sec.subCategories.map(s => {
+      if (String(s.id) !== String(activeSubObj.id)) return s;
+      const subSubs = s.subSubCategories || [];
+      subSubs.push({ id: uid(), name: name.trim() });
+      return { ...s, subSubCategories: subSubs };
+    });
+    await persist(next);
+  }
+
+  async function renameSubSubCategory(subSub) {
+    const name = prompt('하위 분류 이름 수정', subSub.name);
+    if (!name || name === subSub.name) return;
+    const next = JSON.parse(JSON.stringify(data));
+    const sec = next.sectionData[activeSection];
+    sec.subCategories = sec.subCategories.map(s => {
+      if (String(s.id) !== String(activeSubObj.id)) return s;
+      const subSubs = (s.subSubCategories || []).map(ss =>
+        String(ss.id) === String(subSub.id) ? { ...ss, name: name.trim() } : ss
+      );
+      return { ...s, subSubCategories: subSubs };
+    });
+    await persist(next);
+  }
+
+  async function deleteSubSubCategory(subSub) {
+    setConfirm({
+      title: '하위 분류 삭제',
+      text: `"${subSub.name}" 하위 분류 안의 자료들은 분류 없음 상태가 됩니다. 계속하시겠습니까?`,
+      danger: true,
+      onConfirm: async () => {
+        setConfirm(null);
+        const next = JSON.parse(JSON.stringify(data));
+        const sec = next.sectionData[activeSection];
+        sec.subCategories = sec.subCategories.map(s => {
+          if (String(s.id) !== String(activeSubObj.id)) return s;
+          const subSubs = (s.subSubCategories || []).filter(ss => String(ss.id) !== String(subSub.id));
+          return { ...s, subSubCategories: subSubs };
+        });
+        // Clear subSubId from items that had it
+        sec.items = (sec.items || []).map(it =>
+          String(it.subSubId || '') === String(subSub.id) ? { ...it, subSubId: '' } : it
+        );
+        await persist(next);
+      }
+    });
+  }
+
+  async function openNew() {
+    if (isFavView) {
+      alert('새 자료는 각 섹션에서 등록해 주세요.');
+      return;
+    }
+    if (subCategories.length === 0) {
+      const name = prompt('첫 분류의 이름을 입력하세요\n(예: 편집디자인, 3D 애니메이션)');
+      if (!name) return;
+      const next = JSON.parse(JSON.stringify(data));
+      const sec = next.sectionData[activeSection];
+      sec.subCategories = sec.subCategories || [];
+      const newSub = { id: uid(), name: name.trim() };
+      sec.subCategories.push(newSub);
+      await persist(next);
+      // proceed with this new sub selected
+      const newItem = {
+        id: uid(),
+        _section: activeSection,
+        subId: newSub.id,
+        subSubId: activeSubSub !== 'all' ? activeSubSub : '',
+        title: '',
+        desc: '',
+        body: '',
+        files: [],
+        updatedAt: Date.now()
+      };
+      setDetailItem({ ...newItem, _isNew: true });
+      return;
+    }
+    // Create blank item with reasonable defaults
+    const subId = activeSub !== 'all' ? activeSub : (subCategories[0] && subCategories[0].id);
+    const newItem = {
+      id: uid(),
+      _section: activeSection,
+      subId: subId,
+      subSubId: activeSubSub !== 'all' ? activeSubSub : '',
+      title: '',
+      desc: '',
+      body: '',
+      files: [],
+      updatedAt: Date.now()
+    };
+    setDetailItem({ ...newItem, _isNew: true });
+  }
+
+  // ============ Render ============
+  if (!data) {
+    return (
+      <div style={{padding:80,textAlign:'center',color:'var(--muted)'}}>
+        <div className="loading-bar" style={{margin:'0 auto'}}></div>
+        <p style={{marginTop:20}}>데이터 불러오는 중…</p>
+      </div>
+    );
+  }
+
+  const isFav = (id) => (data.favorites || []).includes(id);
+
+  return (
+    <>
+      <button className="mobile-toggle" onClick={()=>setSidebarOpen(true)} aria-label="메뉴">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div className={'sidebar-overlay ' + (sidebarOpen ? 'open' : '')} onClick={()=>setSidebarOpen(false)}></div>
+
+      <div className="app">
+        {/* SIDEBAR */}
+        <aside className={'sidebar ' + (sidebarOpen ? 'open' : '')}>
+          <div className="brand">
+            <div className="brand-mark">SBS<span className="amp"> · </span><em>Academy</em></div>
+            <div className="brand-sub">Consultation Library</div>
+          </div>
+
+          <div className="search-box">
+            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="검색…"
+              value={search}
+              onChange={(e)=>setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="nav-label">Overview</div>
+          <ul className="nav-list">
+            <li className={'nav-item ' + (activeSection === 'home' ? 'active' : '')}
+                onClick={()=>selectSection('home')}>
+              <span className="nav-name">홈</span>
+              <span className="nav-count"></span>
+            </li>
+          </ul>
+
+          <div className="nav-label">Sections</div>
+          <ul className="nav-list">
+            {SECTIONS.filter(s => !s.special).map(s => {
+              const isActiveSection = activeSection === s.key;
+              const sec = data.sectionData[s.key] || {};
+              const subs = sec.subCategories || [];
+              return (
+                <React.Fragment key={s.key}>
+                  <li className={'nav-item ' + (isActiveSection ? 'active' : '')}
+                      onClick={()=>selectSection(s.key)}>
+                    <span className="nav-name">
+                      {isActiveSection && subs.length > 0 ? '▾ ' : '▸ '}
+                      {s.name}
+                    </span>
+                    <span className="nav-count">{sectionCounts[s.key] || 0}</span>
+                  </li>
+                  {isActiveSection && subs.map(sub => {
+                    const isActiveSub = String(activeSub) === String(sub.id);
+                    const subSubs = sub.subSubCategories || [];
+                    return (
+                      <React.Fragment key={sub.id}>
+                        <li className={'nav-item nav-sub ' + (isActiveSub && activeSubSub === 'all' ? 'active' : '')}
+                            onClick={()=>{ setActiveSub(sub.id); setActiveSubSub('all'); setSidebarOpen(false); }}>
+                          <span className="nav-name">
+                            {isActiveSub && subSubs.length > 0 ? '▾ ' : ''}
+                            {sub.name}
+                          </span>
+                        </li>
+                        {isActiveSub && subSubs.map(ss => (
+                          <li key={ss.id}
+                              className={'nav-item nav-subsub ' + (String(activeSubSub) === String(ss.id) ? 'active' : '')}
+                              onClick={()=>{ setActiveSubSub(ss.id); setSidebarOpen(false); }}>
+                            <span className="nav-name">{ss.name}</span>
+                          </li>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+          </ul>
+
+          <div className="nav-label">Pinned</div>
+          <ul className="nav-list">
+            {SECTIONS.filter(s => s.special).map(s => (
+              <li key={s.key}
+                  className={'nav-item ' + (activeSection === s.key ? 'active' : '')}
+                  onClick={()=>selectSection(s.key)}>
+                <span className="nav-name">★ {s.name}</span>
+                <span className="nav-count">{sectionCounts[s.key] || 0}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="sidebar-footer">
+            <span className="user-email">{user ? user.email : ''}</span>
+            <div className="sidebar-actions">
+              <button className="sidebar-btn" onClick={()=>setEditMode(v => !v)}>
+                {editMode ? '잠금' : '편집'}
+              </button>
+              <button className="sidebar-btn danger" onClick={()=>fbAuth.signOut()}>로그아웃</button>
+            </div>
+          </div>
+        </aside>
+
+        {/* MAIN */}
+        <main className="main" style={(activeSection==='home' && !detailItem) ? {background:'transparent',padding:0} : (detailItem ? {background:'transparent',padding:0} : {})}>
+          {detailItem ? (
+            <Detail
+              item={detailItem}
+              sectionKey={detailItem._section || activeSection}
+              data={data}
+              isFav={isFav(detailItem.id)}
+              onClose={() => setDetailItem(null)}
+              onSave={saveItem}
+              onDelete={deleteItem}
+              onToggleFav={toggleFav}
+              onPreviewMedia={(file) => setMediaPreview(file)}
+              editMode={editMode}
+            />
+          ) : activeSection === 'home' ? (
+            <Home
+              data={data}
+              sectionCounts={sectionCounts}
+              onSelectSection={selectSection}
+              editMode={editMode}
+              onSaveHome={saveHomeContent}
+              totalItems={totalItems}
+              totalFavs={totalFavs}
+            />
+          ) : (
+            <>
+              <header className="main-header">
+                <div className="header-text">
+                  <div className="header-eyebrow">
+                    {isFavView ? 'Pinned Materials' : 'Section ' + (SECTIONS.findIndex(s=>s.key===activeSection)+1).toString().padStart(2,'0')}
+                  </div>
+                  <h1 className="header-title">
+                    {isFavView ? <em>즐겨찾기</em> : <>{currentSection.name}</>}
+                  </h1>
+                  <div className="header-meta">
+                    <span>{currentSection.sub || '자주 보여주는 자료 모음'}</span>
+                    <span className="dot"></span>
+                    <span>
+                      {isFavView
+                        ? `${filteredItems.length}건`
+                        : `${subCategories.length}개 분류 · ${allItems.length}건`}
+                    </span>
+                  </div>
+                </div>
+                <div className="header-actions">
+                  {!isFavView && !activeSubObj && editMode && (
+                    <button className="btn ghost" onClick={addSubCategory}>+ 분류 추가</button>
+                  )}
+                </div>
+              </header>
+
+              {isFavView ? (
+                /* 즐겨찾기: 그냥 그리드 */
+                <div className="grid-wrap">
+                  {filteredItems.length === 0 ? (
+                    <div className="empty">
+                      <div className="empty-mark">∅</div>
+                      <div className="empty-title">즐겨찾기가 없습니다</div>
+                      <div className="empty-text">카드의 별 아이콘을 눌러 즐겨찾기에 추가하세요.</div>
+                    </div>
+                  ) : (
+                    <div className="grid">
+                      {filteredItems.map(item => {
+                        const sectionKey = item._section || activeSection;
+                        return (
+                          <Card
+                            key={item.id}
+                            item={item}
+                            sectionKey={sectionKey}
+                            onOpen={(it)=>setDetailItem({...it, _section: sectionKey})}
+                            onToggleFav={toggleFav}
+                            isFav={isFav(item.id)}
+                            onEdit={(it)=>setDetailItem({...it, _section: sectionKey})}
+                            onDelete={(it)=>deleteItem({...it, _section: sectionKey})}
+                            editMode={editMode}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : activeSubObj ? (
+                /* 분류가 선택됨 → 분류 페이지 (노션식) */
+                <SubCategoryPage
+                  sectionKey={activeSection}
+                  sub={activeSubObj}
+                  data={data}
+                  editMode={editMode}
+                  onBack={() => setActiveSub('all')}
+                  onSaveSub={saveSubCategory}
+                  onDelete={deleteSubCategory}
+                  activeSubSub={activeSubSub}
+                  setActiveSubSub={setActiveSubSub}
+                  subSubCategories={subSubCategories}
+                  onAddSubSub={addSubSubCategory}
+                  onRenameSubSub={renameSubSubCategory}
+                  onDeleteSubSub={deleteSubSubCategory}
+                  onCardOpen={(it)=>setDetailItem(it)}
+                  onCardEdit={(it)=>setDetailItem(it)}
+                  onCardDelete={(it)=>deleteItem(it)}
+                  onToggleFav={toggleFav}
+                  isFavId={isFav}
+                  onNewItem={openNew}
+                  search={search}
+                />
+              ) : (
+                /* 분류 카드 그리드 (랜딩) */
+                <div className="subcat-landing">
+                  {subCategories.length === 0 && !editMode ? (
+                    <div className="empty">
+                      <div className="empty-mark">∅</div>
+                      <div className="empty-title">분류가 없습니다</div>
+                      <div className="empty-text">편집 모드에서 분류를 추가할 수 있습니다.</div>
+                    </div>
+                  ) : (
+                    <div className="subcat-landing-grid">
+                      {subCategories.map((sub, idx) => {
+                        const c = allItems.filter(it => String(it.subId) === String(sub.id)).length;
+                        const subSubCount = (sub.subSubCategories || []).length;
+                        return (
+                          <div
+                            key={sub.id}
+                            className="subcat-card"
+                            onClick={() => setActiveSub(sub.id)}
+                          >
+                            <div className="subcat-card-num">{String(idx + 1).padStart(2, '0')}</div>
+                            {editMode && (
+                              <div className="subcat-card-actions">
+                                <button
+                                  className="subcat-card-action"
+                                  title="이름 변경"
+                                  onClick={(e) => { e.stopPropagation(); renameSubCategory(sub); }}
+                                >✎</button>
+                                <button
+                                  className="subcat-card-action"
+                                  title="삭제"
+                                  onClick={(e) => { e.stopPropagation(); deleteSubCategory(sub); }}
+                                >×</button>
+                              </div>
+                            )}
+                            <div className="subcat-card-title">{sub.name}</div>
+                            {sub.tagline && <div className="subcat-card-meta">{sub.tagline}</div>}
+                            <div className="subcat-card-foot">
+                              <span>자료 {c}건{subSubCount > 0 ? ` · 하위 ${subSubCount}` : ''}</span>
+                              <span className="arrow">→</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {editMode && (
+                        <div className="subcat-add-card" onClick={addSubCategory}>
+                          + 새 분류 추가
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+
+      {/* Media Preview (when clicking a file in detail page) */}
+      {mediaPreview && (
+        <MediaPreview
+          file={mediaPreview}
+          onClose={()=>setMediaPreview(null)}
+        />
+      )}
+
+      {/* Confirm */}
+      {confirm && (
+        <Confirm
+          title={confirm.title}
+          text={confirm.text}
+          danger={confirm.danger}
+          onConfirm={confirm.onConfirm}
+          onCancel={()=>setConfirm(null)}
+        />
+      )}
+    </>
+  );
+}
+
+/* ============ Bootstrap ============ */
+const loadingEl = document.getElementById('loading');
+const loginScreen = document.getElementById('login-screen');
+const loginEmail = document.getElementById('login-email');
+const loginPass = document.getElementById('login-password');
+const loginBtn = document.getElementById('login-submit');
+const loginErr = document.getElementById('login-error');
+
+let appRendered = false;
+
+function setLoginLoading(b) {
+  loginBtn.disabled = b;
+  loginBtn.textContent = b ? '로그인 중…' : '로그인';
+}
+
+async function attemptLogin() {
+  const email = loginEmail.value.trim();
+  const pass = loginPass.value;
+  if (!email || !pass) {
+    loginErr.textContent = '이메일과 비밀번호를 입력하세요.';
+    return;
+  }
+  loginErr.textContent = '';
+  setLoginLoading(true);
+  try {
+    await fbAuth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    const msg = (e.code || '').includes('user-not-found') ? '등록되지 않은 이메일입니다.' :
+                (e.code || '').includes('wrong-password') ? '비밀번호가 올바르지 않습니다.' :
+                (e.code || '').includes('invalid-credential') ? '이메일 또는 비밀번호가 올바르지 않습니다.' :
+                (e.code || '').includes('too-many-requests') ? '시도가 너무 많습니다. 잠시 후 다시 시도하세요.' :
+                (e.message || '로그인 실패');
+    loginErr.textContent = msg;
+    setLoginLoading(false);
+  }
+}
+
+loginBtn.addEventListener('click', attemptLogin);
+[loginEmail, loginPass].forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+});
+
+fbAuth.onAuthStateChanged(user => {
+  if (user) {
+    loginScreen.classList.add('hidden');
+    if (!appRendered) {
+      appRendered = true;
+      ReactDOM.render(React.createElement(App), document.getElementById('root'));
+      setTimeout(() => loadingEl.classList.add('hidden'), 100);
+    }
+  } else {
+    loadingEl.classList.add('hidden');
+    loginScreen.classList.remove('hidden');
+    setLoginLoading(false);
+    setTimeout(() => loginEmail.focus(), 100);
+  }
+});
+
+})();
+</script>
+
+</body>
+</html>
